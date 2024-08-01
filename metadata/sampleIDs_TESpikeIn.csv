@@ -1,0 +1,17 @@
+Sample ID,Background sample,Viral control concentration,Viral load,technical replicate?,unique name,Pool for sequencing,Sequence IDs,Number of read pairs (quality/adaptor trimmed)
+B,Msp_p2,10^2,100,1,Msp_p2_10^2_1,Pool_1,B_p2_100_S9,717265
+C,Msp_p8,10^5,100000,1,Msp_p8_10^5_1,Pool_1,C_p8_100000_S7,24205188
+D,Msp_p8,10^3,1000,2,Msp_p8_10^3_2,Pool_1,D_p8_1000_S6,775693
+G,Msp_p2,10^2,100,2,Msp_p2_10^2_2,Pool_1,G_p2_100_S10,565371
+J,Msp_p8,10^3,1000,1,Msp_p8_10^3_1,Pool_1,J_p8_1000_S5,694613
+K,Msp_p8,10^5,100000,2,Msp_p8_10^5_2,Pool_1,K_p8_100000_S8,53224935
+L,Msp_p2,10^5,100000,1,Msp_p2_10^5_1,Pool_1,L_p2_100000_S13,2334898
+O,Msp_p8,10^2,100,2,Msp_p8_10^2_2,Pool_1,O_p8_100_S4,776496
+A,Msp_p6,10^3,1000,0,Msp_p6_10^3_0,Pool_2,A_p6_1000_S2,1087372
+E,Neg_control,0,0,0,Neg_control_0_0,Pool_2,E_control_S16,21999
+F,Msp_p6,10^5,100000,0,Msp_p6_10^5_0,Pool_2,F_p6_100000_S3,12428910
+H,Msp_p8,10^2,100,1,Msp_p8_10^2_1,Pool_2,H_p8_100_S15,3708723
+I,Msp_p6,10^2,100,0,Msp_p6_10^2_0,Pool_2,I_p6_100_S0,3977262
+M,Msp_p2,10^3,1000,1,Msp_p2_10^3_1,Pool_2,M_p2_1000_S11,2678683
+N,Msp_p2,10^5,100000,2,Msp_p2_10^5_2,Pool_2,N_p2_100000_S14,41327620
+P,Msp_p2,10^3,1000,2,Msp_p2_10^3_2,Pool_2,P_p2_1000_S12,11503116
