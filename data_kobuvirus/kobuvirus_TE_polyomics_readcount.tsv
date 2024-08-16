@@ -64,8 +64,8 @@ k97_19971	8467	84562	0	N	p2	100000	ngm	dedup	TE	41327620
 k97_19971	8467	29776	0	O	p8	100	ngm	dedup	TE	776496
 k97_19971	8467	247134	0	P	p2	1000	ngm	dedup	TE	11503116
 k97_19971	8467	12224	0	RNA-Msp-p2	p2	NA	bowtie2	dedup	polyomics	5942760
-k97_19971	8467	1913	0	RNA-Msp-p6	p6	NA	bowtie2	dedup	polyomics	NA
+k97_19971	8467	1913	0	RNA-Msp-p6	p6	NA	bowtie2	dedup	polyomics	6255869
 k97_19971	8467	27908	0	RNA-Msp-p8	p8	NA	bowtie2	dedup	polyomics	7714275
 k97_19971	8467	17991	0	RNA-Msp-p2	p2	NA	bowtie2	nodedup	polyomics	5942760
-k97_19971	8467	2449	0	RNA-Msp-p6	p6	NA	bowtie2	nodedup	polyomics	NA
+k97_19971	8467	2449	0	RNA-Msp-p6	p6	NA	bowtie2	nodedup	polyomics	6255869
 k97_19971	8467	46679	0	RNA-Msp-p8	p8	NA	bowtie2	nodedup	polyomics	7714275

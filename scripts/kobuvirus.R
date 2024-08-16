@@ -1,4 +1,4 @@
-#kobuvirus data
+#kobuvirus data - plot read counts and read depths per sample
 #August 2019
 
 library(tidyverse)
@@ -341,6 +341,19 @@ kobu_depth_norm %>%
   facet_grid(~Background,scales="free")+
   scale_y_continuous(labels = scales::label_comma())
 
+####TE vs shotgun####
 
+#for each sample, plot read count splitting by viral load & background
 
+kobu_norm %>%
+  filter(mapper == "bowtie2") %>%
+  filter(type == "dedup") %>%
+  filter(Background != "control") %>%
+  ggplot(aes(x=reorder(Sample_id,-norm_counts),y=norm_counts,fill = Background))+
+  geom_col()+
+  theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
+  facet_grid(~as.character(Viral.load),scales="free")+
+  ylab("Read count (normalised)")
 
+kobu_norm %>%
+  filter(expt == "polyomics")

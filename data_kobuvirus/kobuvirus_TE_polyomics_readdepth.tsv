@@ -60,8 +60,8 @@ Mouse_kobuvirus	N	p2	100000	1345.0599976378883	1196	0	4199	557	2058	ngm	dedup	TE
 Mouse_kobuvirus	O	p8	100	471.19959844100623	292	0	2099	132	676	ngm	dedup	TE	776496
 Mouse_kobuvirus	P	p2	1000	3829.3669540569267	3782	0	9007	2181	5475.5	ngm	dedup	TE	11503116
 Mouse_kobuvirus	RNA-Msp-p2	p2	NA	144.94567143025864	101	0	769	15	233	bowtie2	dedup	polyomics	5942760
-Mouse_kobuvirus	RNA-Msp-p6	p6	NA	22.620526750915317	18	0	82	5	35	bowtie2	dedup	polyomics	NA
+Mouse_kobuvirus	RNA-Msp-p6	p6	NA	22.620526750915317	18	0	82	5	35	bowtie2	dedup	polyomics	6255869
 Mouse_kobuvirus	RNA-Msp-p8	p8	NA	330.58733908113857	331	0	918	197	439	bowtie2	dedup	polyomics	7714275
 Mouse_kobuvirus	RNA-Msp-p2	p2	NA	213.17727648517774	145	0	1234	30	331	bowtie2	nodedup	polyomics	5942760
-Mouse_kobuvirus	RNA-Msp-p6	p6	NA	28.895830872800286	23	0	104	7	45	bowtie2	nodedup	polyomics	NA
+Mouse_kobuvirus	RNA-Msp-p6	p6	NA	28.895830872800286	23	0	104	7	45	bowtie2	nodedup	polyomics	6255869
 Mouse_kobuvirus	RNA-Msp-p8	p8	NA	552.6854848234321	542	0	1575	310	747	bowtie2	nodedup	polyomics	7714275
