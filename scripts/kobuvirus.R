@@ -343,9 +343,13 @@ kobu_depth_norm %>%
 
 ####TE vs shotgun####
 
-#for each sample, plot read count splitting by viral load & background
+#read count data
 
-kobu_norm %>%
+kobu_norm<- kobu_norm %>%
+  mutate(Viral.load = as.character(Viral.load)) %>%
+ replace_na(list(Viral.load ="Shotgun"))
+
+readcount_TE_polyomics<-kobu_norm %>%
   filter(mapper == "bowtie2") %>%
   filter(type == "dedup") %>%
   filter(Background != "control") %>%
@@ -355,5 +359,79 @@ kobu_norm %>%
   facet_grid(~as.character(Viral.load),scales="free")+
   ylab("Read count (normalised)")
 
-kobu_norm %>%
-  filter(expt == "polyomics")
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readcount_TE_shotgun.pdf")
+
+readcount_TE_polyomics_comb<-kobu_norm %>%
+  filter(mapper == "bowtie2") %>%
+  filter(type == "dedup") %>%
+  filter(Background != "control") %>%
+  ggplot(aes(x=Viral.load,y=norm_counts,fill = Background,colour=Background))+
+  geom_boxplot()+
+  theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
+  ylab("Read count (normalised)")
+
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readcount_TE_shotgun_comb.pdf")
+
+readcount_TE_polyomics_background<-kobu_norm %>%
+  filter(mapper == "bowtie2") %>%
+  filter(type == "dedup") %>%
+  filter(Background != "control") %>%
+  ggplot(aes(x=reorder(Sample_id,-norm_counts),y=norm_counts,fill = Viral.load))+
+  geom_col()+
+  theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
+  facet_grid(~Background,scales="free")+
+  ylab("Read count (normalised)")
+
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readcount_TE_shotgun_background.pdf")
+
+#read depth data
+
+kobu_depth_norm <- kobu_depth_norm %>%
+  mutate(Viral.load = as.character(Viral.load)) %>%
+  replace_na(list(Viral.load ="Shotgun"))
+
+readdepth_mean_TE_polyomics<-kobu_depth_norm %>%
+  filter(mapper == "bowtie2") %>%
+  filter(type == "dedup") %>%
+  filter(Background != "control") %>%
+  ggplot(aes(x=reorder(Sample_id,-norm_mean),y=norm_mean,fill = Background))+
+  geom_col()+
+  theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
+  facet_grid(~Viral.load,scales="free")+
+  ylab("Mean read depth (normalised)")
+
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readdepth_mean_TE_shotgun.pdf")
+
+readdepth_med_TE_polyomics<-kobu_depth_norm %>%
+  filter(mapper == "bowtie2") %>%
+  filter(type == "dedup") %>%
+  filter(Background != "control") %>%
+  ggplot(aes(x=reorder(Sample_id,-norm_med),y=norm_med,fill = Background))+
+  geom_col()+
+  theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
+  facet_grid(~Viral.load,scales="free")+
+  ylab("Median read depth (normalised)")
+
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readdepth_med_TE_shotgun.pdf")
+
+readdepth_TE_polyomics_mean_comb<-kobu_depth_norm %>%
+  filter(mapper == "bowtie2") %>%
+  filter(type == "dedup") %>%
+  filter(Background != "control") %>%
+  ggplot(aes(x=Viral.load,y=norm_mean,fill = Background,colour=Background))+
+  geom_boxplot()+
+  theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
+  ylab("Mean read depth (normalised)")
+
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readdepth_mean_TE_shotgun_comb.pdf")
+
+readdepth_TE_polyomics_med_comb<-kobu_depth_norm %>%
+  filter(mapper == "bowtie2") %>%
+  filter(type == "dedup") %>%
+  filter(Background != "control") %>%
+  ggplot(aes(x=Viral.load,y=norm_med,fill = Background,colour=Background))+
+  geom_boxplot()+
+  theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
+  ylab("Median read depth (normalised)")
+
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readdepth_med_TE_shotgun_comb.pdf")
