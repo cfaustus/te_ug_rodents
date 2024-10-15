@@ -1,9 +1,11 @@
 #kobuvirus genome coverage
 #August 2024
 
+rm(list=ls())
+
 library(tidyverse)
 
-kobu_per_site<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readdepth_persite.tsv", sep = "\t", header = TRUE)
+kobu_per_site<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readdepth_persite_20241007.tsv", sep = "\t", header = TRUE)
 
 #TE data only - compare coverage between backgrounds/viral loads
 
@@ -11,15 +13,6 @@ kobu_per_site<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/dat
 
 norm_cov_per_site<-kobu_per_site %>%
   mutate(norm_cov = coverage/Number.of.paired.end.reads..QT.)
-
-norm_cov_per_site %>%
-  filter(mapper == "bowtie2") %>%
-  filter(expt == "TE") %>%
-  filter(type == "dedup") %>%
-  filter(Background != "p6") %>%
-  ggplot(aes(x=site,y=norm_cov,fill=Background))+
-  geom_col(position="dodge")+
-  facet_wrap(~Sample_id)
 
 TE_coverage_sep<-norm_cov_per_site %>%
   filter(mapper == "bowtie2") %>%
@@ -29,10 +22,10 @@ TE_coverage_sep<-norm_cov_per_site %>%
   ggplot(aes(x=site,y=norm_cov,fill=as.character(Viral.load)))+
   geom_col(position="dodge")+
   facet_wrap(~Sample_id)+
-  ylab("Normalised coverage")+
+  ylab("Normalised Coverage (coverage/total reads)")+
   guides(fill=guide_legend(title="Viral load"))
 
-ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_TE_coverage_separate.pdf")
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_coverage_new//kobuvirus_TE_coverage_separate.pdf")
 
 TE_coverage<-norm_cov_per_site %>%
   filter(mapper == "bowtie2") %>%
@@ -44,7 +37,7 @@ TE_coverage<-norm_cov_per_site %>%
   facet_grid(as.character(Viral.load)~Background)+
   ylab("Normalised coverage")
 
-ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_TE_coverage.pdf")
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_coverage_new//kobuvirus_TE_coverage_background.pdf")
 
 #TE vs shotgun
 
@@ -57,7 +50,7 @@ cov_TE_shotgun<-norm_cov_per_site %>%
   facet_grid(expt~Background)+
   ylab("Normalised coverage")
 
-ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_TE_shotgun_coverage.pdf")
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_coverage_new//kobuvirus_TE_shotgun_coverage.pdf")
 
 #TE vs shotgun with p6
 
@@ -69,4 +62,4 @@ cov_TE_shotgun_p6<-norm_cov_per_site %>%
   facet_grid(expt~Background)+
   ylab("Normalised coverage")
 
-ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_TE_shotgun_coverage_p6.pdf")
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_coverage_new/kobuvirus_TE_shotgun_coverage_p6.pdf")

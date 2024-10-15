@@ -1,18 +1,23 @@
 #kobuvirus data - plot read counts and read depths per sample
 #August 2019
 
+rm(list=ls())
+
 library(tidyverse)
 library(ggpubr)
 library(scales)
 
 ####read counts####
 
-kobu_counts<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readcount.tsv", sep = "\t", header=TRUE)
+kobu_counts<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readcount_20241007.tsv", sep = "\t", header=TRUE)
 
 #normalise kobuvirus read counts by total counts per library
+#also normalise by genome length - use contig length from metagenomic data
 
 kobu_norm<-kobu_counts %>%
-  mutate(norm_counts = matched/Number.of.paired.end.reads..QT.)
+  mutate(norm_counts = matched/Number.of.paired.end.reads..QT.) %>%
+  mutate(norm_counts2 = matched/Number.of.paired.end.reads..QT./length) %>%
+  mutate(norm_counts3 = matched/length)
 
 #number of viral reads vs total reads
 #some relationship but not always the case that more reads = more depth (esp for non dedup)
@@ -31,36 +36,67 @@ kobu_norm %>%
 
 #for each non p6 sample, plot read count splitting by viral load & background
 
-readcount_norm_split<-kobu_norm %>%
-  filter(mapper == "bowtie2") %>%
-  filter(expt == "TE") %>%
-  filter(type == "dedup") %>%
+kobu_reads<-kobu_norm %>%
   filter(Background != "p6") %>%
   filter(Background != "control") %>%
-  ggplot(aes(x=reorder(Sample_id,-norm_counts),y=norm_counts,fill = Background))+
-  geom_col()+
-  theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
-  facet_grid(~as.character(Viral.load),scales="free")+
-  ylab("Read count (normalised)")
+  filter(expt == "TE") %>%
+  ggplot(aes(x=Viral.load,y=log(matched),colour = Background))+
+  geom_point()+
+  geom_smooth(aes(group=Background),se=FALSE)+
+  facet_grid(~type)+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  scale_x_log10()+
+  ylab("Log(Kobuvirus Reads)")
 
-ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readcount_norm_split.pdf")
+kobu_reads_norm<-kobu_norm %>%
+  filter(Background != "p6") %>%
+  filter(Background != "control") %>%
+  filter(expt == "TE") %>%
+  ggplot(aes(x=Viral.load,y=log(norm_counts),colour = Background))+
+  geom_point()+
+  geom_smooth(aes(group=Background),se=FALSE)+
+  facet_grid(~type)+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  scale_x_log10()+
+  ylab("Log(Kobuvirus reads/cleaned reads)")
+
+#the normalisations that involve length are the same as just the matched reads or divided by total reads - as all the viruses have the same length!
+
+ggarrange(kobu_reads,kobu_reads_norm,nrow=2,common.legend = TRUE)
+
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_reads_new/kobuvirus_readcount_norm.pdf")
 
 #with p6
 
-readcount_norm_p6<-kobu_norm %>%
-  filter(mapper == "bowtie2") %>%
-  filter(expt == "TE") %>%
-  filter(type == "dedup") %>%
+kobu_reads_p6<-kobu_norm %>%
   filter(Background != "control") %>%
-  ggplot(aes(x=reorder(Sample_id,-norm_counts),y=norm_counts,fill = Background))+
-  geom_col()+
-  theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
-  facet_grid(~as.character(Viral.load),scales="free")+
-  ylab("Read count (normalised)")
+  filter(expt == "TE") %>%
+  ggplot(aes(x=Viral.load,y=log(matched),colour = Background))+
+  geom_point()+
+  geom_smooth(aes(group=Background),se=FALSE)+
+  facet_grid(~type)+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  scale_x_log10()+
+  ylab("Log(Kobuvirus Reads)")
+
+kobu_reads_norm_p6<-kobu_norm %>%
+  filter(Background != "control") %>%
+  filter(expt == "TE") %>%
+  ggplot(aes(x=Viral.load,y=log(norm_counts),colour = Background))+
+  geom_point()+
+  geom_smooth(aes(group=Background),se=FALSE)+
+  facet_grid(~type)+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  scale_x_log10()+
+  ylab("Log(Kobuvirus reads/cleaned reads)")
+
+ggarrange(kobu_reads_p6,kobu_reads_norm_p6,nrow=2,common.legend = TRUE)
+
+ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_reads_new/kobuvirus_readcount_norm_p6.pdf")
 
 #combined across backgrounds
 
-readcounts_norm_comb<-kobu_norm %>%
+kobu_norm %>%
   filter(mapper == "bowtie2") %>%
   filter(expt == "TE") %>%
   filter(type == "dedup") %>%
@@ -71,12 +107,10 @@ readcounts_norm_comb<-kobu_norm %>%
   theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
   ylab("Read count (normalised)")
 
-ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readcounts_combined.pdf")
-
 #read counts separated by background including p6
 #p6 behaving more in an expected way here compared to virome mix data
 
-readcounts_background<-kobu_norm %>%
+kobu_norm %>%
   filter(mapper == "bowtie2") %>%
   filter(expt == "TE") %>%
   filter(type == "dedup") %>%
@@ -86,8 +120,6 @@ readcounts_background<-kobu_norm %>%
   theme(axis.title.x=element_blank(),axis.title.y=element_text(size=10))+
   facet_grid(~Background,scales="free")+
   ylab("Read count (normalised)")
-
-ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_readcounts_background_p6.pdf")
 
 #compare bowtie2 vs ngm
 #higher counts with ngm for all samples
@@ -116,9 +148,9 @@ kobu_norm %>%
 ####read depth####
 #first check that the normalised mean/median is the same as the mean/median of the normalised per site depth
 
-kobu_depth<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readdepth.tsv", sep = "\t", header = TRUE)
+kobu_depth<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readdepth_20241007.tsv", sep = "\t", header = TRUE)
 
-kobu_per_site<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readdepth_persite.tsv", sep = "\t", header = TRUE)
+kobu_per_site<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readdepth_persite_20241007.tsv", sep = "\t", header = TRUE)
 
 kobu_depth_norm<-kobu_depth %>%
   mutate(norm_mean = mean_depth/Number.of.paired.end.reads..QT.) %>%
