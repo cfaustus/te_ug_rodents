@@ -1,0 +1,16 @@
+virus,Sample_id,Background,Viral load,mean_depth,median_depth,min,max,LQ,UQ,mapper,type
+cardiovirus,A,p6,1000,13.329445644348452,0,0,573,0,0,bowtie2,nodedup_TE
+cardiovirus,B,p2,100,1.6005759539236861,0,0,77,0,0,bowtie2,nodedup_TE
+cardiovirus,C,p8,100000,0.1912167026637869,0,0,9,0,0,bowtie2,nodedup_TE
+cardiovirus,D,p8,1000,0.3779697624190065,0,0,17,0,0,bowtie2,nodedup_TE
+cardiovirus,F,p6,100000,8.244636429085674,0,0,356,0,0,bowtie2,nodedup_TE
+cardiovirus,G,p2,100,1.408783297336213,0,0,63,0,0,bowtie2,nodedup_TE
+cardiovirus,H,p8,100,4.295176385889129,0,0,195,0,0,bowtie2,nodedup_TE
+cardiovirus,I,p6,100,2.2600431965442764,0,0,103,0,0,bowtie2,nodedup_TE
+cardiovirus,J,p8,1000,0.06436285097192225,0,0,3,0,0,bowtie2,nodedup_TE
+cardiovirus,K,p8,100000,0.4586033117350612,0,0,21,0,0,bowtie2,nodedup_TE
+cardiovirus,L,p2,100000,0.6480921526277897,0,0,32,0,0,bowtie2,nodedup_TE
+cardiovirus,M,p2,1000,30.46983441324694,0,0,1384,0,1,bowtie2,nodedup_TE
+cardiovirus,N,p2,100000,13.868826493880489,0,0,626,0,0,bowtie2,nodedup_TE
+cardiovirus,O,p8,100,0.16025917926565875,0,0,8,0,0,bowtie2,nodedup_TE
+cardiovirus,P,p2,1000,79.0106551475882,0,0,3567,0,2,bowtie2,nodedup_TE

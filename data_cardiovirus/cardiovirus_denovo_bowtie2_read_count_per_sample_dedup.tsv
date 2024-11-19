@@ -1,0 +1,17 @@
+virus,length,matched,unmatched,Sample_id,Background,Viral load,mapper,type
+cardiovirus,6945,92,0,A,p6,1000,bowtie2,dedup_TE
+cardiovirus,6945,40,0,B,p2,100,bowtie2,dedup_TE
+cardiovirus,6945,5,0,C,p8,100000,bowtie2,dedup_TE
+cardiovirus,6945,9,0,D,p8,1000,bowtie2,dedup_TE
+cardiovirus,6945,0,0,E,control,0,bowtie2,dedup_TE
+cardiovirus,6945,53,0,F,p6,100000,bowtie2,dedup_TE
+cardiovirus,6945,36,0,G,p2,100,bowtie2,dedup_TE
+cardiovirus,6945,25,0,H,p8,100,bowtie2,dedup_TE
+cardiovirus,6945,52,0,I,p6,100,bowtie2,dedup_TE
+cardiovirus,6945,2,0,J,p8,1000,bowtie2,dedup_TE
+cardiovirus,6945,13,0,K,p8,100000,bowtie2,dedup_TE
+cardiovirus,6945,15,0,L,p2,100000,bowtie2,dedup_TE
+cardiovirus,6945,148,0,M,p2,1000,bowtie2,dedup_TE
+cardiovirus,6945,117,0,N,p2,100000,bowtie2,dedup_TE
+cardiovirus,6945,6,0,O,p8,100,bowtie2,dedup_TE
+cardiovirus,6945,288,0,P,p2,1000,bowtie2,dedup_TE
