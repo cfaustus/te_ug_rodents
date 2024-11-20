@@ -1,4 +1,4 @@
-#Linear model for TE data
+#Linear model for TE data - separated by virus
 #November 2024
 
 #viral read depth
@@ -7,10 +7,7 @@
 rm(list=ls())
 
 library(tidyverse)
-library(ggpubr)
-library(lme4)
-library(boot)
-library(car)
+library(broom)
 
 ####read counts/normalised read counts####
 
@@ -48,9 +45,7 @@ depths_reads<-left_join(depths_bt_all,metadata2,by="Sample_id")%>%
   mutate(genome_structure = case_when((virus == "Human_adenovirus_40"| virus == "Human_betaherpesvirus") ~ "DNA",
                                       ,.default = "RNA"))
 
-
-####model for spike in viruses - mean read depth####
-#read count and read depth are more similar to count data (but read depth not an integer so gives warnings)
+####linear model for spike in viruses - mean read depth####
 
 depths_reads_sub<-depths_reads %>%
   filter(Background != "p6") %>%
@@ -65,58 +60,72 @@ hist(depths_reads_sub$Viral.load)
 hist(depths_reads_sub$log_depth)
 hist(depths_reads_sub$log_viral_load)
 
-#lm1<-glm(mean_depth~Viral.load*virus,data=depths_reads_sub,family=poisson)
-#similar to count data but gives warning because there are non-integers
+summary(depths_reads_sub$log_depth)
+summary(depths_reads_sub$log_viral_load)
 
-lm1<-glm(mean_depth~Viral.load+virus,data=depths_reads_sub,family=gaussian(link="log"))
+#all viruses together
 
-lm2<-glm(log_depth~log_viral_load*virus,data=depths_reads_sub,family=gaussian)
+lm1<-glm(log_depth~log_viral_load*virus,data=depths_reads_sub,family="gaussian")
 
 summary(lm1)
 
-summary(lm2)
-
 glm.diag.plots(lm1)
 
-glm.diag.plots(lm2)
+pred<-predict(lm1,type="response")
 
-pred<-predict(lm1,type="response",se.fit=TRUE)
+rsq <-function (x,y) cor(x,y)^2
 
-pdf<-data.frame(depths_reads_sub$Viral.load)
-pdf$fit<-(pred$fit)^10
-pdf$se<-(pred$se.fit)^10
+rsq(depths_reads_sub$log_depth,pred)
 
-ggplot()+
-  geom_point(data=depths_reads_sub,aes(x=Viral.load,y=mean_depth,color=virus))+
-  geom_line(data=pdf,aes(y=fit,x=depths_reads_sub.Viral.load))+
-  geom_ribbon(data=pdf,aes(y=fit,ymin=fit-1.96*se,ymax=fit+1.96*se,x=depths_reads_sub.Viral.load),fill="blue",alpha=0.3)+
-  scale_x_log10()+
-  scale_y_log10()
+##split by viruses
 
-#residuals plot shows funnel shape - homogeneity of variance not met. need to check how to resolve that
+cols<-c("#4477AA","#66CCEE","#228833","#CCBB44","#EE6677","#AA3377")
 
-lm2<-lmer(mean_depth~Viral.load+ (1|virus),data=depths_reads_sub)
+facet_names<-c("Human_adenovirus_40" = "Human adenovirus 40",
+               "Human_betaherpesvirus"= "Human betaherpesvirus",
+               "Human_respiratory_syncytial_virus"= "Human respiratory syncytial virus",
+               "Influenza_B_virus"= "Influenza B virus",
+               "Mammalian_orthoreovirus3"= "Mammalian orthoreovirus 3",
+               "Zika_virus"= "Zika virus")
 
-summary(lm3)
-Anova(lm3)
+virus<-(unique(depths_reads_sub$virus)) %>%
+  rep(.,each=2) %>%
+  data.frame()
 
-#could also try with read count which is more straightforward to model potentially
+list_models<-depths_reads_sub %>%
+  group_split(virus) %>%
+  map(~lm(log_depth~log_viral_load,data=.))
 
-counts_reads_sub<-counts_reads %>%
-  filter(Background != "p6") %>%
-  filter(Background != "control") %>%
-  filter(type == "dedup_TE")
+lm_tidy<-map(list_models,broom::tidy) %>%
+  do.call(rbind.data.frame,.) %>%
+  cbind(virus,.) %>%
+  rename(virus = ".") %>%
+  select(virus,term,estimate) %>%
+  pivot_wider(names_from = "term",values_from = "estimate")
 
-hist(counts_reads_sub$matched)
+lm_summary<-depths_reads_sub %>%
+  group_by(virus) %>%
+  summarise(Intercept = lm(log_depth~log_viral_load)$coefficients[1],
+            Coeff_x1 = lm(log_depth~log_viral_load)$coefficients[2],
+            R2 = summary(lm(log_depth~log_viral_load))$r.squared,
+            pvalue = summary(lm(log_depth~log_viral_load))$coefficients["log_viral_load",4])
 
-lm4<-glm(matched ~ Viral.load+virus,data=counts_reads_sub,family=poisson)
+lm_combined<-left_join(lm_tidy,lm_summary,by="virus")
 
-summary(lm4)
+ggplot() +
+  geom_point(data=depths_reads_sub,mapping=aes(log_viral_load,log_depth,color=virus))+
+  geom_abline(data = lm_combined,aes(intercept = `(Intercept)`,slope = log_viral_load)) +
+  geom_text(data=lm_combined,colour="black",aes(x=4.7,y=3,label=round(Coeff_x1,digits=2)) )+
+  geom_text(data=lm_combined,colour="black",aes(x=4,y=3,label="Slope ="))+
+  geom_text(data=lm_combined,colour="black",aes(x=4.7,y=2,label=round(R2,digits=2)) )+
+  geom_text(data=lm_combined,colour="black",aes(x=4,y=2,label="R2 ="))+
+  facet_wrap(~virus,labeller=as_labeller(facet_names)) +
+  theme_bw() +
+  xlab("Log(Viral Load)") +
+  ylab("Log(Mean Read Depth)")+
+  scale_color_manual(values=cols)+
+  guides(color = FALSE)
 
-glm.diag.plots(lm4)
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/compare_spike_ins_atcc/model_readdepth_dedup.png")
 
-lm5<-glm(matched ~ Viral.load+virus,data=counts_reads_sub)
-
-summary(lm5)
-
-glm.diag.plots(lm5)
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS5.pdf")
