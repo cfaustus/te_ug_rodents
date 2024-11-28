@@ -9,7 +9,7 @@ library(scales)
 
 kobu_depth<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readdepth_20241007.tsv", sep = "\t", header = TRUE) %>%
   select(!expt) %>%
-  select(!Number.of.paired.end.reads..QT.) %>%
+  select(!Number.of.paired.end.reads..QT.)
 
 cardio_depth<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_cardiovirus/cardiovirus_denovo_bowtie2_read_depth_per_sample_dedup.tsv",sep =",",header=TRUE)
 
@@ -42,4 +42,4 @@ depth_both %>%
 
 #ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_coverage_new/kobu_cardio_depth.png")
 
-#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS16.pdf",width=12,height=7)
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS15.pdf",width=12,height=7)

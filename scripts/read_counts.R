@@ -130,3 +130,34 @@ ggarrange(total_reads,viral_reads,prop_viral,nrow=3,common.legend = TRUE)
 
 #ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS3.pdf")
 
+####compare proportion viral reads per pool with shotgun####
+
+metadata3 <- metadata %>%
+  select(Sample.ID,Number.of.read.pairs..quality.adaptor.trimmed.,Pool.for.sequencing) %>%
+  rename(Sample_id = Sample.ID) %>%
+  rename(QC_reads = Number.of.read.pairs..quality.adaptor.trimmed.)
+
+reads_viral_dedup3<-full_join(metadata3,viral_reads_dedup,by="Sample_id") 
+
+reads_viral_nodedup3<-full_join(metadata3,viral_reads_nodedup,by="Sample_id") 
+
+reads_viral_dedup3 %>%
+  group_by(Pool.for.sequencing) %>%
+  summarise(viral_reads = sum(total_virus_reads),
+            total_reads = sum(QC_reads*2),
+            prop_viral = viral_reads/total_reads)
+
+polyomics<-read.csv("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_polyomics/total_virus_mapped_reads_per_sample_dedup.csv")
+
+#read data from polyomics_indexes_stefano document
+total_reads<-data.frame(total_reads = c(5942760,7714275))
+
+keeps<-c("RNA-Msp-p2","RNA-Msp-p8")
+
+polyomics_read_prop<-polyomics %>%
+  filter(Sample_id %in% keeps)
+
+polyomics_read_prop2<-cbind(polyomics_read_prop,total_reads)
+
+polyomics_read_prop2 %>%
+summarise(prop_viral = total_virus_reads/total_reads)

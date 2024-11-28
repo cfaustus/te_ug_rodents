@@ -8,7 +8,6 @@ library(tidyverse)
 kobu_per_site<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_kobuvirus/kobuvirus_TE_polyomics_readdepth_persite_20241007.tsv", sep = "\t", header = TRUE) %>%
   select(virus,seg,site,coverage,n_sites,Sample_id,Background,Viral.load,mapper,type)
 
-
 kobu_per_site$Viral.load<-kobu_per_site$Viral.load %>%
   replace_na(., 0)
   
@@ -17,12 +16,45 @@ kobu_per_site$Sample_id <- kobu_per_site$Sample_id %>%
              "RNA-Msp-p8" ~ "ME_P2",
              .default = kobu_per_site$Sample_id)
 
+kobu_per_site$Background <- kobu_per_site$Background %>%
+  case_match("p2" ~ "ME_P1",
+             "p8" ~ "ME_P2",
+             .default = kobu_per_site$Background)
+
 cardio_per_site<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_cardiovirus/cardiovirus_denovo_bowtie2_read_depth_per_site_and_sample_dedup.tsv", sep = ",", header = TRUE)
 
-persite_both<-rbind(kobu_per_site,cardio_per_site)
+cardio_polyomics_per_site<-read.table("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/data_cardiovirus/cardiovirus_denovo_bowtie2_readdepth_per_site_sample_dedup_polyomics.tsv",sep=",",header=TRUE) %>%
+  select(!contig_name)
+
+#View(cardio_polyomics_per_site)
+
+cardio_TE_polyomics<-full_join(cardio_per_site,cardio_polyomics_per_site,by=c("virus","seg","site","coverage","n_sites","Sample_id","Background","Viral.load","mapper","type"))
+
+cardio_TE_polyomics$Viral.load<-cardio_TE_polyomics$Viral.load %>%
+  replace_na(., 0)
+
+drops<-c("RNA-Msp-p1","RNA-Msp-p3","RNA-Msp-p4","RNA-Msp-p5","RNA-Msp-p6","RNA-Msp-p7","RNA-Msp-p9")
+
+cardio_TE_polyomics <- cardio_TE_polyomics %>%
+  filter(!Sample_id %in% drops)
+
+cardio_TE_polyomics$Sample_id <- cardio_TE_polyomics$Sample_id %>%
+  case_match("RNA-Msp-p2" ~ "ME_P1",
+             "RNA-Msp-p8" ~ "ME_P2",
+             .default = cardio_TE_polyomics$Sample_id)
+
+cardio_TE_polyomics$Background <- cardio_TE_polyomics$Background %>%
+  case_match("S18" ~ "ME_P1",
+             "S43" ~ "ME_P2",
+             "p2" ~ "ME_P1",
+             "p8" ~ "ME_P2",
+             .default = cardio_TE_polyomics$Background)
+
+persite_both<-rbind(kobu_per_site,cardio_TE_polyomics)
 
 persite_both$type <- persite_both$type %>%
   case_match("dedup_TE" ~ "dedup",
+             "dedup_polyomics" ~ "dedup",
              .default = persite_both$type)
 
 #TE data only - compare coverage between backgrounds/viral loads
@@ -68,7 +100,7 @@ kobu_coverage<-kobu_per_site %>%
   mutate(percent_coverage = genome_coverage/8467) %>%
   mutate(virus = "Kobuvirus")
 
-cardio_coverage<-cardio_per_site %>%
+cardio_coverage<-cardio_TE_polyomics %>%
   filter(Background != "p6") %>%
   group_by(Sample_id,Viral.load,Background) %>%
   filter(coverage > 0) %>%
@@ -102,13 +134,13 @@ coverage_both %>%
   ylab("Genome coverage")+
   xlab("Sample ID")+
   facet_grid(virus~Viral.load,scales="free_x",labeller=as_labeller(coverage_labels))+
-  theme_bw()+
   scale_color_manual(values=cols2,labels=c("ME_P1","ME_P2"))+
+  theme_bw()+
   scale_y_continuous(limits=c(0,1))
 
 #ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_coverage_new//kobuvirus_TE_shotgun_coverage.png")
 
-#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS14.pdf")
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS16.pdf")
 
 #per site genome coverage - Kobu
 
@@ -128,7 +160,7 @@ persite_both %>%
 
 #ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_coverage_new//kobuvirus_TE_shotgun_coverage_per_site.pdf",width=12,height=7)
 
-#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS15.pdf",width=12,height=7)
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS17.pdf",width=12,height=7)
 
 #per site genome coverage - Cardio
 
@@ -146,6 +178,6 @@ persite_both %>%
   xlab("") +
   ggtitle("Cardiovirus")
 
-#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_coverage_new/cardio_TE_coverage_per_site.pdf",width=12,height=7)
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/kobuvirus_coverage_new/cardio_TE_shotgun_coverage_per_site.png",width=12,height=7)
 
-#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS17.pdf",width=12,height=7)
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS18.pdf",width=12,height=7)

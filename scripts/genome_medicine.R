@@ -122,4 +122,4 @@ dedup_per_site %>%
 
 #ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/genome_medicine/HADV_genome_coverage.pdf",width=20,height=16)
 
-#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS13.pdf",width=20,height=16)
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS14.pdf",width=20,height=16)
