@@ -1,0 +1,1373 @@
+---
+title: "target_offtarget"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+##all viruses - target and off target
+
+library(tidyverse)
+library(ggpubr)
+library(tidyplots)
+library(ggthemes)
+
+```
+
+
+## Figure 1: plots of TE experiment data - read counts and read depths
+
+### Read-in data
+```{r}
+#ATCC genomes updated version
+#October 2024
+
+#viral load vs read count normalised using different methods, comparing deduplicated and non-deduplicated
+#use bowtie2 data
+
+####read counts/normalised read counts####
+
+#metadata
+
+metadata <- read.csv("metadata/sampleIDs_TESpikeIn.csv", header = TRUE)
+
+metadata2 <- metadata |>
+  select(Sample.ID, Number.of.read.pairs..quality.adaptor.trimmed.) |>
+  rename(Sample_id = Sample.ID) |>
+  rename(QC_reads = Number.of.read.pairs..quality.adaptor.trimmed.)
+
+#import and combine read count files
+#deduplicated and non-deduplicated
+
+counts_dedup_bt <-
+  read.table(
+    "data_TE/TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+counts_nodedup_bt <-
+  read.table(
+    "data_TE/TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+counts_bt_all <- rbind(counts_dedup_bt, counts_nodedup_bt)
+
+counts_reads <- left_join(counts_bt_all, metadata2, by = "Sample_id")
+
+#normalise by both raw read count and genome length - should be the same as mean read depth
+
+counts_reads_norm <- counts_reads |>
+  mutate(norm_counts1 = matched / QC_reads) |>
+  mutate(norm_counts2 = matched / QC_reads / length) |>
+  mutate(norm_counts3 = matched / length) |>
+  mutate(genome_structure = case_when((
+    virus == "Human_adenovirus_40" |
+      virus == "Human_betaherpesvirus"
+  ) ~ "DNA",
+  ,
+  .default = "RNA"
+  ))
+
+```
+
+
+### Format data
+```{r}
+#change labels in facet plots
+
+facet_names <- c("dedup_TE" = "Deduplicated",
+                 "nodedup_TE" = "Non-Deduplicated")
+
+cols <- c("#4477AA",
+          "#66CCEE",
+          "#228833",
+          "#CCBB44",
+          "#EE6677",
+          "#AA3377")
+```
+
+### Make plots
+```{r}
+
+#plot viral read counts (non normalised)
+
+read_count <- 
+  counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(matched),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_x_log10() +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  ylab("Log(Viral Reads)")
+
+#ggsave("figures/compare_spike_ins_atcc/read_counts.pdf",width=8,height=6)
+
+#normalise by raw read count
+
+read_count_norm1 <- counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(norm_counts1),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_x_log10() +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  ylab("Log(viral reads/cleaned reads)")
+
+#normalise by raw read count and genome length
+
+read_count_norm2 <- counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(norm_counts2),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_x_log10() +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  ylab("Log(viral reads/cleaned reads/genome length)")
+
+
+```
+
+### plot just the two lefthand panels from the original figure
+```{r, warning=FALSE, echo=FALSE, message=FALSE, fig.height=10, fig.width=8}
+
+ggarrange(read_count,
+          read_count_norm2,
+          nrow = 2,
+          common.legend = TRUE)
+
+#ggsave("figures/compare_spike_ins_atcc/log_read_count_depth_2panels.png",width=10,height=7)
+
+
+```
+
+### plot viral read counts (non normalised)
+```{r}
+
+##deduplicated only
+
+read_count_dedup <- 
+  counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  filter(type == "dedup_TE") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(matched),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_x_log10() +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  ylab("Log(Viral Reads)")
+
+#normalise by raw read count and genome length
+
+read_count_norm2_dedup <- 
+  counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  filter(type == "dedup_TE") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(norm_counts2),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_x_log10() +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  ylab("Log(viral reads/cleaned reads/genome length)")
+
+```
+
+### ***Final plot***
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.height=6, fig.height=8}
+#plot just the two lefthand panels from the original figure
+
+ggarrange(
+  read_count_dedup,
+  read_count_norm2_dedup,
+  nrow = 2,
+  common.legend = TRUE,
+  align = "hv"
+)
+
+ggsave("figures/compare_spike_ins_atcc/log_read_count_depth_2panels_dedup.png",
+       width=10,
+       height=7)
+
+ggsave("figures/manuscript_figures_pdf/Figure1.pdf",
+       width=10,
+       height=7)
+
+```
+
+## Figure S1
+
+### Read depths
+```{r}
+####read depths####
+
+#import and combine read depth files
+
+depth_dedup_bt <-
+  read_tsv(
+    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv"
+  )
+
+depth_nodedup_bt <-
+  read_tsv(
+    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv"
+  )
+
+depths_bt_all <- rbind(depth_dedup_bt, depth_nodedup_bt)
+
+depths_reads <- 
+  depths_bt_all |>
+  left_join(metadata2, by = "Sample_id") |>
+  mutate(genome_structure = case_when((
+    virus == "Human_adenovirus_40" |
+      virus == "Human_betaherpesvirus"
+  ) ~ "DNA",
+  .default = "RNA"
+  )) |>
+  rename(Viral.load = `Viral load`)
+
+```
+
+### Make plots
+```{r}
+
+read_depths <- 
+  depths_reads |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(mean_depth),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  scale_x_log10() +
+  ylab("Log(mean read depth)")
+
+#ggsave("figures/compare_spike_ins_atcc/mean_depth.pdf",width=8,height=6)
+
+```
+
+### ***Final plot***
+```{r}
+
+ggarrange(
+  read_count,
+  read_count_norm1,
+  read_count_norm2,
+  read_depths,
+  nrow = 2,
+  ncol = 2,
+  common.legend = TRUE,
+  align = "hv"
+)
+
+#ggsave("figures/compare_spike_ins_atcc/log_read_count_depth.png",width=10,height=7)
+
+#ggsave("figures/manuscript_figures_pdf/FigureS1.pdf",width=10,height=7)
+
+#apparently normalised read count using method 2 should not actually be the same
+
+```
+
+## Figure S4
+
+### Make plots
+```{r}
+####read counts/depths split by background####
+
+#change labels in facet plots
+
+facet_names_bg <- c(
+  "dedup_TE" = "Deduplicated",
+  "nodedup_TE" = "Non-Deduplicated",
+  "p2" = "P1",
+  "p8" = "P2"
+)
+
+#break down by Background x virus
+
+background_counts_reads <- 
+  counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(matched),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  facet_grid(Background ~ type, labeller = as_labeller(facet_names_bg)) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.y = element_text(size = 10),
+    legend.title = element_blank()
+  ) +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  scale_x_log10() +
+  ylab("Log(Viral Reads)")
+
+backgrounds_counts_reads_norm <- 
+  counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(norm_counts1),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  facet_grid(Background ~ type, labeller = as_labeller(facet_names_bg)) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.y = element_text(size = 10),
+    legend.title = element_blank()
+  ) +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  scale_x_log10() +
+  ylab("Log(viral reads/cleaned reads)")
+
+backgrounds_counts_reads_norm2 <- 
+  counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(norm_counts2),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  facet_grid(Background ~ type, labeller = as_labeller(facet_names_bg)) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.y = element_text(size = 10),
+    legend.title = element_blank()
+  ) +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  scale_x_log10() +
+  ylab("Log(viral reads/cleaned reads/genome length)")
+
+background_read_depths <- 
+  depths_reads |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(mean_depth),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE) +
+  facet_grid(Background ~ type, labeller = as_labeller(facet_names_bg)) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.y = element_text(size = 10),
+    legend.title = element_blank()
+  ) +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  scale_x_log10() +
+  ylab("Log(mean read depth)")
+
+```
+
+### Final plot 
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.height=6, fig.height=8}
+
+ggarrange(
+  background_counts_reads,
+  backgrounds_counts_reads_norm,
+  backgrounds_counts_reads_norm2,
+  background_read_depths,
+  nrow = 2,
+  ncol = 2,
+  common.legend = TRUE
+)
+
+#ggsave("figures/compare_spike_ins_atcc/backgrounds_read_count_depth.png",width=10,height=7)
+
+#ggsave("figures/manuscript_figures_pdf/FigureS4.pdf",width=10,height=7)
+
+```
+
+####extras
+
+```{r}
+read_count_raw<-counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=Viral.load,y=matched,colour = virus))+
+  geom_point()+
+  geom_smooth(aes(group=virus),se=FALSE)+
+  facet_grid(~type,labeller=as_labeller(facet_names))+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  scale_x_log10()+
+  ylab("Viral Reads")
+
+raw_read_count_norm1<- counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=Viral.load,y=norm_counts1,colour = virus))+
+  geom_point()+
+  geom_smooth(aes(group=virus),se=FALSE)+
+  facet_grid(~type)+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  scale_x_log10()+
+  ylab("Viral reads/cleaned reads")
+
+raw_read_count_norm2<- counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=Viral.load,y=norm_counts2,colour = virus))+
+  geom_point()+
+  geom_smooth(aes(group=virus),se=FALSE)+
+  facet_grid(~type)+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  scale_x_log10()+
+  ylab("Viral reads/cleaned reads/genome length")
+
+##just genome length
+
+read_count_norm3<- counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=Viral.load,y=log(norm_counts3),colour = virus))+
+  geom_point()+
+  geom_smooth(aes(group=virus),se=FALSE)+
+  facet_grid(~type,labeller=as_labeller(facet_names))+
+  theme_bw()+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  scale_x_log10()+
+  scale_color_hue(labels=c("Human adenovirus 40","Human betaherpesvirus","Human respiratory syncytial virus","Influenza B virus","Mammalian orthoreovirus 3","Zika virus"))+
+  ylab("Log(viral reads/genome length)")
+
+#ggsave("figures/compare_spike_ins_atcc/norm_genome_length.pdf")
+
+raw_read_depths<- depths_reads |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=Viral.load,y=mean_depth,colour = virus))+
+  geom_point()+
+  geom_smooth(aes(group=virus),se=FALSE)+
+  facet_grid(~type)+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  scale_x_log10()+
+  ylab("Mean read depth")
+
+ggarrange(read_count_raw,raw_read_count_norm1,raw_read_count_norm2,raw_read_depths,nrow=2,ncol=2,common.legend=TRUE)
+
+#ggsave("figures/compare_spike_ins_atcc/read_count_depth.pdf")
+
+####split by viruses####
+
+counts_split<-counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=virus,y=log(matched),colour=type))+
+  geom_boxplot()+
+  facet_grid(~as.character(Viral.load))+
+  ylab("Log(Viral Reads)")+
+  theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_text(size=10))
+
+counts_norm_split<-counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=virus,y=log(norm_counts1),colour=type))+
+  geom_boxplot()+
+  facet_grid(~as.character(Viral.load))+
+  ylab("Log(viral reads/cleaned reads)")+
+  theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.title.y=element_text(size=10))
+
+counts_norm2_split<-counts_reads_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=virus,y=log(norm_counts2),colour=type))+
+  geom_boxplot()+
+  facet_grid(~as.character(Viral.load))+
+  ylab("Log(viral reads/cleaned reads/genome length)")+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))
+
+depth_split<-depths_pool |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=virus,y=log(mean_depth),colour=type))+
+  geom_boxplot()+
+  facet_grid(~as.character(Viral.load))+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))+
+  ylab("Log(mean read depth)")+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=10))
+
+ggarrange(counts_split,counts_norm_split,counts_norm2_split,depth_split,nrow=2,ncol=2,heights=c(1,2),common.legend = TRUE)
+
+#ggsave("figures/compare_spike_ins_atcc/compare_viruses_split.pdf")
+
+
+```
+
+
+
+
+
+## >>> Figure 2: plots of TE experiment data - genome coverage & per site coverage
+
+### Read-in data
+```{r}
+
+#plots of TE experiment data - genome coverage & per site coverage
+#also separated by viruses
+#ATCC genomes updated version
+#October 2024
+
+#use bowtie2 data
+
+####genome coverage####
+
+dedup_per_site <-
+  read_tsv(
+    "data_TE/TE_sequencing_experiment_readdepth_per_site
+    
+    TEdata_TE/TE_sequencing_experiment_readdepth_per_site_sample_and_virus_bowtie2_dedup_atcc_ref.tsv"
+  )
+
+nodedup_per_site <-
+  read_tsv(
+    "data_TE/TE_sequencing_experiment_readdepth_per_site_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv"
+  )
+
+#add length column from read depth file to per site file
+
+#metadata
+
+metadata <-
+  read.csv(
+    "metadata/sampleIDs_TESpikeIn.csv",
+    header = TRUE
+  )
+
+metadata2 <- metadata |>
+  select(Sample.ID, Number.of.read.pairs..quality.adaptor.trimmed.) |>
+  rename(Sample_id = Sample.ID) |>
+  rename(QC_reads = Number.of.read.pairs..quality.adaptor.trimmed.)
+
+#import and combine read count files
+#deduplicated and non-deduplicated
+
+counts_dedup_bt <-
+  read.table(
+    "data_TE/TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+counts_nodedup_bt <-
+  read.table(
+    "data_TE/TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+counts_bt_all <- rbind(counts_dedup_bt, counts_nodedup_bt)
+
+counts_reads <- left_join(counts_bt_all, metadata2, by = "Sample_id")
+
+```
+
+### Format data
+```{r}
+#normalise by both raw read count and genome length - should be the same as mean read depth
+
+counts_reads_norm<-counts_reads |>
+  mutate(norm_counts1 = matched/QC_reads) |>
+  mutate(norm_counts2 = matched/QC_reads/length) |>
+  mutate(norm_counts3 = matched/length) |>
+  mutate(genome_structure = case_when((virus == "Human_adenovirus_40"| virus == "Human_betaherpesvirus") ~ "DNA",
+                                      ,.default = "RNA"))
+
+lengths<-counts_reads_norm |>
+  select(virus,length) |>
+  distinct()
+
+#calculate genome coverage
+
+persite_coverage_dedup<-dedup_per_site |>
+  group_by(Sample_id,virus,Viral.load,Background,type) |>
+  filter(coverage > 0) |>
+  summarise(genome_coverage = n()) |>
+  left_join(lengths) |>
+  mutate(percent_coverage = genome_coverage/length)
+
+persite_coverage_nodedup<-nodedup_per_site |>
+  group_by(Sample_id,virus,Viral.load,Background,type) |>
+  filter(coverage > 0) |>
+  summarise(genome_coverage = n()) |>
+  left_join(lengths) |>
+  mutate(percent_coverage = genome_coverage/length)
+
+persite_coverage_both<-rbind(persite_coverage_dedup,persite_coverage_nodedup)
+
+coverage_labels<-c("0" = "Control",
+                   "100" = "1e+02",
+                   "1000" = "1e+03",
+                   "100000" = "1e+05",
+                   "dedup_TE" = "Deduplicated",
+                   "nodedup_TE"= "Non-Deduplicated")
+
+coverage_labels2<-c("0" = "Control",
+                    "100" = "1e+02",
+                    "1000" = "1e+03",
+                    "100000" = "1e+05")
+
+cols2<-c("#BB5566","#004488")
+
+cols4<-c("#DDAA33","#BB5566","#004488")
+
+
+persite_coverage_both |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(x=virus,y=percent_coverage,colour = Background))+
+  geom_boxplot(outlier.shape=NA)+
+  geom_point(position = position_dodge(width = .75))+
+  facet_grid(type~as.character(Viral.load),labeller=as_labeller(coverage_labels))+
+  theme_bw()+
+  theme(axis.title.y=element_text(size=10))+
+  ylab("Genome coverage")+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=15),axis.text=element_text(size=12),strip.text=element_text(size=12))+
+  scale_color_manual(values=cols2,labels=c("ME_P1","ME_P2"))+
+  scale_x_discrete(labels=c("Human adenovirus 40","Human betaherpesvirus","Human respiratory syncytial virus","Influenza B virus","Mammalian orthoreovirus 3","Zika virus"))+
+  scale_y_continuous(limits=c(0,1))
+
+#ggsave("figures/compare_spike_ins_atcc/genome_cov_split.png",width=15,height=6)
+
+##are the deduplicated and non deduplicated datasets identical??
+##if they are the same can maybe just show one
+#show deduplicated
+
+persite_coverage_both |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  filter(type == "dedup_TE") |>
+  ggplot(aes(x=virus,y=percent_coverage,colour = Background))+
+  geom_boxplot(outlier.shape=NA)+
+  geom_point(position = position_dodge(width = .75))+
+  facet_grid(~as.character(Viral.load),labeller=as_labeller(coverage_labels2))+
+  theme_bw()+
+  ylab("Genome coverage")+
+  theme(axis.title.x=element_blank(),axis.text.x=element_text(angle=45,hjust=1),axis.title.y=element_text(size=15),axis.text=element_text(size=12),strip.text=element_text(size=12),legend.text = element_text(size=10))+
+  scale_color_manual(values=cols2,labels=c("ME_P1","ME_P2"))+
+  scale_x_discrete(labels=c("Human adenovirus 40","Human betaherpesvirus","Human respiratory syncytial virus","Influenza B virus","Mammalian orthoreovirus 3","Zika virus"))+
+  scale_y_continuous(limits=c(0,1))
+
+#ggsave("figures/compare_spike_ins_atcc/genome_cov_deduponly.png",width=15,height=6)
+
+#ggsave("figures/manuscript_figures_pdf/Figure2.pdf",width=15,height=6)
+
+ggplot(persite_coverage_both,aes(x=as.character(Viral.load),y=percent_coverage))+
+  geom_point()+
+  geom_boxplot(outlier.shape=NA)+
+  facet_wrap(~type)+
+  ylab("Genome coverage")+
+  xlab("Viral load")
+
+#ggsave("figures/compare_spike_ins_atcc/genome_cov_combined.pdf")
+
+persite_both<-rbind(dedup_per_site,nodedup_per_site)
+
+persite_reads<-left_join(persite_both,metadata2,by="Sample_id")
+
+persite_norm<-persite_reads |>
+  mutate(norm_cov = coverage/QC_reads)
+
+coverage_labels3<-c("100" = "1e+02",
+                    "1000" = "1e+03",
+                    "100000" = "1e+05",
+                    "p2" = "ME_P1",
+                    "p8"= "ME_P2")
+
+persite_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  filter(type == "dedup_TE") |>
+  filter(virus == "Human_respiratory_syncytial_virus") |>
+  ggplot(aes(x=site,y=coverage,fill=Background))+
+  geom_col()+
+  facet_wrap(Viral.load~Sample_id)+
+  ylab("Log(Coverage)")+
+  ggtitle("Human RSV (deduplicated)")+
+  guides(fill=guide_legend(title="Background"))+
+  theme_bw()+
+  scale_y_log10()+
+  scale_fill_manual(values=cols2,labels=c("ME_P1","ME_P2"))
+
+#ggsave("figures/manuscript_figures_pdf/FigureS5.pdf",width=10,height=8)
+
+persite_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  filter(type == "dedup_TE") |>
+  filter(virus == "Zika_virus") |>
+  ggplot(aes(x=site,y=coverage,fill=Background))+
+  geom_col()+
+  facet_wrap(Viral.load~Sample_id)+
+  ylab("Log(Coverage)")+
+  ggtitle("Zika virus (deduplicated)")+
+  guides(fill=guide_legend(title="Background"))+
+  theme_bw()+
+  scale_y_log10()+
+  scale_fill_manual(values=cols2,labels=c("ME_P1","ME_P2"))
+
+#ggsave("figures/manuscript_figures_pdf/FigureS6.pdf",width=10,height=8)
+
+persite_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  filter(type == "dedup_TE") |>
+  filter(virus == "Human_adenovirus_40") |>
+  ggplot(aes(x=site,y=coverage,fill=Background))+
+  geom_col()+
+  facet_wrap(Viral.load~Sample_id)+
+  ylab("Log(Coverage)")+
+  ggtitle("Human Adenovirus (deduplicated)")+
+  guides(fill=guide_legend(title="Background"))+
+  theme_bw()+
+  scale_y_log10()+
+  scale_fill_manual(values=cols2,labels=c("ME_P1","ME_P2"))
+
+#ggsave("figures/manuscript_figures_pdf/FigureS7.pdf",width=20,height=18)
+
+persite_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  filter(type == "dedup_TE") |>
+  filter(virus == "Human_betaherpesvirus") |>
+  ggplot(aes(x=site,y=coverage,fill=Background))+
+  geom_polygon()+
+  facet_wrap(Viral.load~Sample_id)+
+  ylab("Log(Coverage)")+
+  ggtitle("Human Betaherpesvirus (deduplicated)")+
+  guides(fill=guide_legend(title="Background"))+
+  theme_bw()+
+  scale_y_log10()+
+  scale_fill_manual(values=cols2,labels=c("ME_P1","ME_P2"))
+
+#ggsave("figures/compare_spike_ins_atcc/HBHV_coverage_test.pdf",width=20,height=18)
+
+#have to do these differently due to segmentation
+
+FLU_ME1<-persite_norm |>
+  filter(virus == "Influenza_B_virus") |>
+  filter(type == "dedup_TE") |>
+  filter(Background == "p2") |>
+  ggplot(aes(x=site,y=coverage,fill=as.character(Viral.load)))+
+  geom_col()+
+  facet_grid(seg~Sample_id)+
+  ylab("Log(Coverage)")+
+  ggtitle("Influenza B virus (Background ME_1 deduplicated)")+
+  guides(fill=guide_legend(title="Viral load"))+
+  theme_bw()+
+  scale_y_log10()+
+  scale_fill_manual(values=cols4,labels=c("1e+02","1e+03","1e+05"))
+
+FLU_ME2<-persite_norm |>
+  filter(virus == "Influenza_B_virus") |>
+  filter(type == "dedup_TE") |>
+  filter(Background == "p8") |>
+  ggplot(aes(x=site,y=coverage,fill=as.character(Viral.load)))+
+  geom_col()+
+  facet_grid(seg~Sample_id)+
+  ylab("Log(Coverage)")+
+  ggtitle("Influenza B virus (Background ME_2 deduplicated)")+
+  guides(fill=guide_legend(title="Viral load"))+
+  theme_bw()+
+  scale_y_log10()+
+  scale_fill_manual(values=cols4,labels=c("1e+02","1e+03","1e+05"))
+
+ggarrange(FLU_ME1,FLU_ME2,ncol=2,common.legend=TRUE)
+
+#ggsave("figures/manuscript_figures_pdf/FigureS9.pdf",width=20,height=18)
+
+REO_ME1<-persite_norm |>
+  filter(virus == "Mammalian_orthoreovirus3") |>
+  filter(type == "dedup_TE") |>
+  filter(Background == "p2") |>
+  ggplot(aes(x=site,y=coverage,fill=as.character(Viral.load)))+
+  geom_col()+
+  facet_grid(seg~Sample_id)+
+  ylab("Log(Coverage)")+
+  ggtitle("Mammalian orthoreovirus 3 (Background ME_1 deduplicated)")+
+  guides(fill=guide_legend(title="Viral load"))+
+  theme_bw()+
+  scale_y_log10()+
+  scale_fill_manual(values=cols4,labels=c("1e+02","1e+03","1e+05"))
+
+REO_ME2<-persite_norm |>
+  filter(virus == "Mammalian_orthoreovirus3") |>
+  filter(type == "dedup_TE") |>
+  filter(Background == "p8") |>
+  ggplot(aes(x=site,y=coverage,fill=as.character(Viral.load)))+
+  geom_col()+
+  facet_grid(seg~Sample_id)+
+  ylab("Log(Coverage)")+
+  ggtitle("Mammalian orthoreovirus 3 (Background ME_2 deduplicated)")+
+  guides(fill=guide_legend(title="Viral load"))+
+  theme_bw()+
+  scale_y_log10()+
+  scale_fill_manual(values=cols4,labels=c("1e+02","1e+03","1e+05"))
+
+ggarrange(REO_ME1,REO_ME2,ncol=2,common.legend=TRUE)
+
+#ggsave("figures/manuscript_figures_pdf/FigureS10.pdf",width=20,height=18)
+
+
+```
+
+## Figure 3: all viruses - target and off target
+
+
+### Read-in data
+```{r}
+
+# read in metadata
+
+metadata <-
+  read.csv("metadata/sampleIDs_TESpikeIn.csv", header = TRUE)
+
+metadata2 <-
+  metadata |>
+  select(
+    Sample.ID,
+    Background.sample,
+    Viral.load,
+    Number.of.read.pairs..quality.adaptor.trimmed.
+  ) |>
+  rename(Sample_id = Sample.ID) |>
+  rename(QC_reads = Number.of.read.pairs..quality.adaptor.trimmed.)
+
+#import viral reads mapped (to calculate proportions)
+
+viral_reads_dedup <-
+  read.csv(
+    "data_TE/total_virus_mapped_reads_per_sample_dedup_atcc_ref_20241108.csv",
+    header = TRUE
+  )
+
+viral_reads_nodedup <-
+  read.csv(
+    "data_TE/total_virus_mapped_reads_per_sample_nodedup_atcc_ref_20241108.csv",
+    header = TRUE
+  )
+
+#import contingency tables
+
+contingency_dedup <-
+  read.csv(
+    "data_TE/contingency_table_mapped_virus_reads_per_family_genus_sample_dedup_atcc_ref_20241106.csv",
+    header = TRUE
+  )
+
+contingency_nodedup <-
+  read.csv(
+    "data_TE/contingency_table_mapped_virus_reads_per_family_genus_sample_nodedup_atcc_ref_20241106.csv",
+    header = TRUE
+  )
+
+contaminants <-
+  c("Betacoronavirus", "Alphainfluenzavirus", "Gammaretrovirus")
+
+```
+
+### Format data
+```{r}
+
+# pivot longer  
+dedup_long <-
+  contingency_dedup |>
+  filter(!genus %in% contaminants) |>
+  filter(genus != "NA") |>
+  pivot_longer(cols = A:P,
+               names_to = "Sample_id",
+               values_to = "count") |>
+  mutate(
+    target = case_when(
+      genus == "Cyclovirus" ~ "off_target",
+      genus == "Cardiovirus" ~ "off_target",
+      genus == "Kobuvirus" ~ "off_target",
+      .default = "on_target"
+    )
+  ) |>
+  mutate(genome_structure = case_when((genus == "Mastadenovirus" |
+                                         genus == "Cytomegalovirus") ~ "DNA",
+                                      .default = "RNA"
+  ))
+
+no_dedup_long <- contingency_nodedup |>
+  filter(!genus %in% contaminants) |>
+  filter(genus != "NA") |>
+  pivot_longer(cols = A:P,
+               names_to = "Sample_id",
+               values_to = "count") |>
+  mutate(
+    target = case_when(
+      genus == "Cyclovirus" ~ "off_target",
+      genus == "Cardiovirus" ~ "off_target",
+      genus == "Kobuvirus" ~ "off_target",
+      .default = "on_target"
+    )
+  ) |>
+  mutate(genome_structure = case_when((genus == "Mastadenovirus" |
+                                         genus == "Cytomegalovirus") ~ "DNA",
+                                      .default = "RNA"
+  ))
+
+metadata_dedup <- left_join(dedup_long, metadata2, by = "Sample_id")
+
+dedup_viral_reads <-
+  left_join(metadata_dedup, viral_reads_dedup, by = "Sample_id") |>
+  mutate(total_reads = QC_reads * 2) |>
+  mutate(prop_total = count / total_reads) |>
+  mutate(prop_viral = count / total_virus_reads)
+
+metadata_no_dedup <- left_join(no_dedup_long, metadata2, by = "Sample_id")
+
+nodedup_viral_reads <-
+  left_join(metadata_no_dedup, viral_reads_nodedup, by = "Sample_id") |>
+  mutate(total_reads = QC_reads * 2) |>
+  mutate(prop_total = count / total_reads) |>
+  mutate(prop_viral = count / total_virus_reads)
+
+```
+
+### Make plots
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+facet_names <- c(
+  "Msp_p2" = "P1",
+  "Msp_p8" = "P2",
+  "off_target" = "Off target viruses",
+  "on_target" = "On target viruses"
+)
+
+cols <-
+  c(
+    "#CCBB44",
+    "#332288",
+    "#EE7733",
+    "#66CCEE",
+    "#882255",
+    "#4477AA",
+    "#AA3377",
+    "#228833",
+    "#EE6677"
+  )
+
+
+dedup_reads <- 
+  dedup_viral_reads |>
+  filter(Background.sample != "Neg_control") |>
+  filter(Background.sample != "Msp_p6") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(count),
+    colour = genus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
+  facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
+  theme_few() + 
+  scale_x_log10() +
+  ylab("Log (Viral Reads)") + 
+  xlab("Log (Viral load)") + 
+  scale_color_manual(values = cols) +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  )
+
+dedup_prop_viral <-
+  dedup_viral_reads |>
+  filter(Background.sample != "Neg_control") |>
+  filter(Background.sample != "Msp_p6") |>
+  ggplot(aes(x = Viral.load, y = prop_viral, colour = genus)) +
+  geom_point() +
+  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
+  facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
+  theme_few() + 
+  scale_x_log10() +
+  scale_y_log10() +
+  ylab("Proportion of viral reads") +
+  xlab("Log (Viral load)") + 
+  scale_color_manual(values = cols) +
+    theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  )
+
+dedup_prop_all <-
+  dedup_viral_reads |>
+  filter(Background.sample != "Neg_control") |>
+  filter(Background.sample != "Msp_p6") |>
+  ggplot(aes(x = Viral.load, y = prop_total, colour = genus)) +
+  geom_point() +
+  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
+  facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
+  theme_few() + 
+  scale_x_log10() +
+  scale_y_log10(limits=c(5e-8,1)) +
+  ylab("Proportion of total reads") +
+  xlab("Log (Viral load)") + 
+  scale_color_manual(values = cols) +
+    theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  )
+
+```
+
+### Dedup -- viral reads, prop all reads, and prop viral reads
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.width=8, fig.height=12}
+
+ggarrange(
+  dedup_reads,
+  dedup_prop_all,
+  dedup_prop_viral,
+  nrow = 3,
+  common.legend = TRUE,
+  align = "hv"
+)
+
+```
+
+### ***Final plot***
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.width=7, fig.height=8}
+
+#ggsave("figures/compare_spike_ins_atcc/target_offtarget_dedup.png",width=8,height=10)
+
+##just plot viral reads and prop viral
+
+ggarrange(
+  dedup_reads,
+  dedup_prop_viral,
+  nrow = 2,
+  common.legend = TRUE,
+  align = "hv"
+)
+
+ggsave("figures/compare_spike_ins_atcc/target_offtarget_dedup_2025-01-01.png", width = 10, height = 8)
+
+ggsave("figures/manuscript_figures_pdf/Figure_3_2025-01-01.pdf", width = 10, height = 8)
+
+```
+
+### ----nodedup results ----
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.width=6}
+##extras - no dedup
+
+nodedup_reads <-
+  nodedup_viral_reads |>
+  filter(Background.sample != "Neg_control") |>
+  filter(Background.sample != "Msp_p6") |>
+  ggplot(aes(
+    x = Viral.load,
+    y = log(count),
+    colour = genus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
+  facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_x_log10() +
+  ylab("Log(Viral Reads)") +
+  scale_color_manual(values = cols)
+
+nodedup_prop_viral <- 
+  nodedup_viral_reads |>
+  filter(Background.sample != "Neg_control") |>
+  filter(Background.sample != "Msp_p6") |>
+  ggplot(aes(x = Viral.load, y = prop_viral, colour = genus)) +
+  geom_point() +
+  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
+  facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_x_log10() +
+  scale_y_log10() +
+  ylab("Proportion of viral reads") +
+  scale_color_manual(values = cols)
+
+nodedup_prop_all <- nodedup_viral_reads |>
+  filter(Background.sample != "Neg_control") |>
+  filter(Background.sample != "Msp_p6") |>
+  ggplot(aes(x = Viral.load, y = prop_total, colour = genus)) +
+  geom_point() +
+  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
+  facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12, family = "Helvetica Neue"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_text(size = 12, family = "Helvetica Neue"),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_x_log10() +
+  scale_y_log10() +
+  ylab("Proportion of total reads") +
+  scale_color_manual(values = cols)
+
+ggarrange(
+  nodedup_reads,
+  nodedup_prop_all,
+  nodedup_prop_viral,
+  nrow = 3,
+  common.legend = TRUE,
+  align = "hv"
+)
+
+#ggsave("figures/compare_spike_ins_atcc/target_offtarget_nodedup.pdf",width=8,height=10)
+
+```
+
+
