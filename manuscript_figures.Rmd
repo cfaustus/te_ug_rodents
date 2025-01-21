@@ -188,42 +188,44 @@ lm_summary <- depths_reads_sub |>
     pvalue = summary(lm(log_depth ~ log_viral_load))$coefficients["log_viral_load", 4]
   )
 
-lm_combined <- left_join(lm_tidy, lm_summary, by = "virus")
+lm_combined <- 
+  left_join(lm_tidy, lm_summary, by = "virus")
+
 
 ```
 
 #### Make plot
-```{r}
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
 ggplot() +
   geom_point(data = depths_reads_sub,
-             mapping = aes(log_viral_load, log_depth, color = virus)) +
+             mapping = aes(Viral.load, mean_depth, color = virus)) +
   geom_abline(data = lm_combined, aes(intercept = `(Intercept)`, slope = log_viral_load), linetype="dotted") +
   geom_text(data = lm_combined,
             colour = "black",
             aes(
-              x = 4.7,
-              y = 3,
+              x = 6*10000,
+              y = 2,
               label = round(Coeff_x1, digits = 2)),
-            size = 3) +
+            size = 3.5) +
   geom_text(data = lm_combined,
             colour = "black",
-            aes(x = 4, 
-                y = 3, 
+            aes(x = 1.5*10000, 
+                y = 2, 
                 label = "Slope ="),
-            size = 3) +
+            size = 3.5) +
   geom_text(data = lm_combined,
             colour = "black",
             aes(
-              x = 4.7,
-              y = 2,
+              x = 6*10000,
+              y = 6,
               label = round(R2, digits = 2)),
-            size = 3) +
+            size = 3.5) +
   geom_text(data = lm_combined,
             colour = "black",
-            aes(x = 4, 
-                y = 2, 
+            aes(x = 2*10000, 
+                y = 6, 
                 label = "R2 ="),
-            size = 3) +
+            size = 3.5) +
   facet_wrap( ~ virus, labeller = as_labeller(facet_names)) +
   theme_few() +
   theme(
@@ -233,10 +235,12 @@ ggplot() +
     axis.title.y = element_text(size = 10),
     legend.title = element_blank()
   ) +
-  xlab("log10(Viral Load)") +
-  ylab("log10(Mean Read Depth)") +
+    xlab("Log (Viral load)") + 
+  ylab("Log (Mean Read Depth)") +
   scale_color_manual(values = cols) +
-  guides(color = FALSE)
+  guides(color = FALSE) +
+  scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + 
+    scale_y_log10(labels = scales::trans_format("log10", scales::label_math()))
 
 ```
 
@@ -245,12 +249,12 @@ ggplot() +
 #ggsave("figures/compare_spike_ins_atcc/model_readdepth_dedup.png")
 
 ggsave("figures/manuscript_figure_2025/PDF/Figure_1.pdf",
-       width = 7.5,
-       height = 4)
+       width = 8,
+       height = 5)
 
 ggsave("figures/manuscript_figure_2025/PNG/Figure_1.png",
-       width = 7.5,
-       height = 4)
+       width = 8,
+       height = 5)
 
 ```
 
@@ -942,7 +946,7 @@ pool_depths_sum <-
 
 ```
 
-### Final plot
+### ***Final plot***
 ```{r}
 ggarrange(
   pool_counts_sum,
