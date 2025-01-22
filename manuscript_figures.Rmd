@@ -16,6 +16,7 @@ library(tidyverse)
 library(ggpubr)
 library(tidyplots)
 library(ggthemes)
+library(scales)
 
 ```
 
@@ -1067,7 +1068,7 @@ total_reads <-
   filter(Background != "control") |>
   ggplot(aes(
     x = Viral.load,
-    y = log10(total_reads),
+    y = (total_reads),
     colour = Background
   )) +
   geom_point() +
@@ -1079,9 +1080,10 @@ total_reads <-
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
-  scale_x_log10(labels = scales::label_log10()) + xlab("Viral load (copies / ml)") +
-  ggtitle("Total Reads") +
-  ylab("log10(Total Reads)") +
+  scale_y_log10(labels = scales::trans_format("log10", scales::label_math())) + 
+    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+  # ggtitle("All") +
+  ylab("Total number of reads") +
   scale_color_manual(values = cols2, labels = c("P1", "P2"))
 
 viral_reads <- 
@@ -1090,7 +1092,7 @@ viral_reads <-
   filter(Background != "control") |>
   ggplot(aes(
     x = Viral.load,
-    y = log10(viral_reads),
+    y = (viral_reads),
     colour = Background
   )) +
   geom_point() +
@@ -1102,9 +1104,10 @@ viral_reads <-
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
-  scale_x_log10(labels = scales::label_log10()) + xlab("Viral load (copies / ml)") +
-  ggtitle("Total Viral Reads") +
-  ylab("log10(Total Viral Reads)") +
+  scale_y_log10(labels = scales::trans_format("log10", scales::label_math())) + 
+    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+  # ggtitle("Viral reads") +
+  ylab("Number of viral reads") +
   scale_color_manual(values = cols2, labels = c("P1", "P2"))
 
 ATCC_reads <- 
@@ -1113,7 +1116,7 @@ ATCC_reads <-
   filter(Background != "control") |>
   ggplot(aes(
     x = Viral.load,
-    y = log10(ATCC_reads),
+    y = (ATCC_reads),
     colour = Background
   )) +
   geom_point() +
@@ -1125,9 +1128,10 @@ ATCC_reads <-
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
-  scale_x_log10(labels = scales::label_log10()) + xlab("Viral load (copies / ml)") +
-  ggtitle("Spike In Viral Reads") +
-  ylab("log10(Spike In Viral Reads)") +
+  scale_y_log10(labels = scales::trans_format("log10", scales::label_math())) + 
+    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+  ggtitle("Spike-in Viral Reads") +
+  ylab("Spike-in Viral Reads") +
   scale_color_manual(values = cols2, labels = c("P1", "P2"))
 
 prop_ATCC <- reads_plot |>
@@ -1143,9 +1147,9 @@ prop_ATCC <- reads_plot |>
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
-  scale_x_log10(labels = scales::label_log10()) + xlab("Viral load (copies / ml)") +
-  ggtitle("Proportion Spike In Viral") +
-  ylab("Spike In Viral Reads/Total Reads") +
+    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+  ggtitle("Spike-in viral reads") +
+  ylab("Proportion") +
   scale_color_manual(values = cols2, labels = c("P1", "P2"))
 
 prop_viral <- reads_plot |>
@@ -1161,10 +1165,10 @@ prop_viral <- reads_plot |>
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
-  scale_x_log10(labels = scales::label_log10()) + xlab("Viral load (copies / ml)") +
-  ggtitle("Proportion Viral") +
-  ylab("Viral Reads/Total Reads") +
-  scale_color_manual(values = cols2, labels = c("P1", "P2"))
+ scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+  # ggtitle("Viral reads") +
+  ylab("Proportion of viral reads") +
+  scale_color_manual(values = cols2, labels = c("P1", "P2")) + scale_y_continuous(limits=c(0,1.0))
 
 
 #ggarrange(total_reads,viral_reads,ATCC_reads,prop_viral,prop_ATCC,nrow=2,ncol=3,common.legend = TRUE)
@@ -1172,7 +1176,8 @@ prop_viral <- reads_plot |>
 ```
 
 ### ***Final plot***
-```{r}
+```{r, warning=FALSE, echo=FALSE, message=FALSE}
+
 ggarrange(total_reads,
           viral_reads,
           prop_viral,
@@ -1182,7 +1187,9 @@ ggarrange(total_reads,
 
 #ggsave("figures/compare_spike_ins_atcc/backgrounds_reads.png")
 
-#ggsave("figures/manuscript_figures_pdf/FigureS3.pdf")
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S3.pdf", 
+       width = 8,
+       height = 8)
 
 ####compare proportion viral reads per pool with shotgun####
 
@@ -1229,7 +1236,7 @@ ggarrange(total_reads,
 
 ### --------------------
 
-## Figure S4
+## Not required ?Figure S4
 
 ### Make plots
 ```{r}
