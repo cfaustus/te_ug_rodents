@@ -1655,7 +1655,7 @@ persite_norm |>
   ggplot(aes(x = site, y = coverage, fill = Background)) +
   geom_col() +
   facet_wrap(Viral.load ~ Sample_id, label = label_parsed) +
-  ylab("log10(Coverage)") +
+  ylab("Coverage") +
   ggtitle("Human RSV (deduplicated)") +
   guides(fill = guide_legend(title = "Background")) +
   theme_few() +
@@ -1674,7 +1674,13 @@ persite_norm |>
 
 #### ***Final plot***
 ```{r}
-#ggsave("figures/manuscript_figures_pdf/FigureS5.pdf",width=10,height=8)
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S4.pdf",
+       width=9,
+       height=8)
+
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S4.png",
+       width=9,
+       height=8)
 ```
 
 
