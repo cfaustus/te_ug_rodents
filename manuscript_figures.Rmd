@@ -1191,6 +1191,10 @@ ggsave("figures/manuscript_figure_2025/PDF/Figure_S3.pdf",
        width = 8,
        height = 8)
 
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S3.png", 
+       width = 8,
+       height = 8)
+
 ####compare proportion viral reads per pool with shotgun####
 
 # metadata3 <- metadata |>
@@ -1622,7 +1626,7 @@ ggsave(
 
 ### --------------------
 
-### Figure S6
+### Figure S4
 ```{r}
 
 persite_both <- rbind(dedup_per_site, nodedup_per_site)
@@ -1675,12 +1679,104 @@ persite_norm |>
 #### ***Final plot***
 ```{r}
 ggsave("figures/manuscript_figure_2025/PDF/Figure_S4.pdf",
-       width=9,
-       height=8)
+       width=15,
+       height=10)
 
 ggsave("figures/manuscript_figure_2025/PNG/Figure_S4.png",
-       width=9,
-       height=8)
+       width=15,
+       height=10)
+```
+
+
+### --------------------
+
+### Figure S5
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+persite_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  filter(type == "dedup_TE") |>
+  filter(virus == "Zika_virus") |>
+  rename(Viral.load = `Viral load`) |>
+  ggplot(aes(x = site, y = coverage, fill = Background)) +
+  geom_col() +
+  facet_wrap(Viral.load ~ Sample_id, label = label_parsed) +
+  ylab("Coverage") +
+  ggtitle("Zika virus (deduplicated)") +
+  guides(fill = guide_legend(title = "Background")) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_y_log10() +
+  scale_fill_manual(values = cols2, labels = c("P1", "P2"))
+
+```
+
+####***Final plot***
+```{r}
+
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S5.pdf",
+       width=15,
+       height=10)
+
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S5.png",
+       width=15,
+       height=10)
+
+```
+
+
+### --------------------
+
+### Figure S6
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+persite_norm |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  filter(type == "dedup_TE") |>
+  filter(virus == "Human_adenovirus_40") |>
+  rename(Viral.load = `Viral load`) |>
+  ggplot(aes(x = site, y = coverage, fill = Background)) +
+  geom_col() +
+  facet_wrap(Viral.load ~ Sample_id, label = label_parsed) +
+  ylab("Coverage") +
+  ggtitle("Human Adenovirus (deduplicated)") +
+  guides(fill = guide_legend(title = "Background")) +
+ theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_y_log10() +
+  scale_fill_manual(values = cols2, labels = c("P1", "P2"))
+
+```
+
+####***Final plot***
+```{r}
+
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S6.pdf",
+       width=15,
+       height=10)
+
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S6.png",
+       width=15,
+       height=10)
+
 ```
 
 
@@ -1688,47 +1784,130 @@ ggsave("figures/manuscript_figure_2025/PNG/Figure_S4.png",
 
 ### Figure S7
 ```{r}
-
+HBV <- 
 persite_norm |>
   filter(Background != "p6") |>
   filter(Background != "control") |>
   filter(type == "dedup_TE") |>
-  filter(virus == "Zika_virus") |>
+  filter(virus == "Human_betaherpesvirus") |>
+  rename(Viral.load = `Viral load`) |>
   ggplot(aes(x = site, y = coverage, fill = Background)) +
   geom_col() +
-  facet_wrap(Viral.load ~ Sample_id) +
-  ylab("log10(Coverage)") +
-  ggtitle("Zika virus (deduplicated)") +
+  facet_wrap(Viral.load ~ Sample_id, label = label_parsed) +
+  ylab("Coverage") +
+  ggtitle("Human Betaherpesvirus (deduplicated)") +
   guides(fill = guide_legend(title = "Background")) +
-  theme_bw() +
+ theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
   scale_y_log10() +
   scale_fill_manual(values = cols2, labels = c("P1", "P2"))
 
-#ggsave("figures/manuscript_figures_pdf/FigureS6.pdf",width=10,height=8)
+```
+
+####***Final plot***
+```{r}
+
+ggsave(plot = HBV, file="figures/manuscript_figure_2025/PDF/Figure_S7.pdf",
+       width=15,
+       height=10,
+       dpi = 600)
+
+ggsave(plot = HBV, file="figures/manuscript_figure_2025/PNG/Figure_S7.png",
+       width=15,
+       height=10)
+
 
 ```
+
 
 
 ### --------------------
 
 ### Figure S8
 ```{r}
-persite_norm |>
-  filter(Background != "p6") |>
-  filter(Background != "control") |>
-  filter(type == "dedup_TE") |>
-  filter(virus == "Human_adenovirus_40") |>
-  ggplot(aes(x = site, y = coverage, fill = Background)) +
-  geom_col() +
-  facet_wrap(Viral.load ~ Sample_id) +
-  ylab("log10(Coverage)") +
-  ggtitle("Human Adenovirus (deduplicated)") +
-  guides(fill = guide_legend(title = "Background")) +
-  theme_bw() +
-  scale_y_log10() +
-  scale_fill_manual(values = cols2, labels = c("P1", "P2"))
+#have to do these differently due to segmentation
 
-#ggsave("figures/manuscript_figures_pdf/FigureS7.pdf",width=20,height=18)
+
+FLU_ME1 <- persite_norm |>
+  filter(virus == "Influenza_B_virus") |>
+  filter(type == "dedup_TE") |>
+  filter(Background == "p2") |>
+  rename(Viral.load = `Viral load`) |>
+  ggplot(aes(
+    x = site,
+    y = coverage,
+    fill = as.character(Viral.load)
+  )) +
+  geom_col() +
+  facet_grid(seg ~ Sample_id) +
+  ylab("Coverage") +
+  ggtitle("Influenza B virus (Background 1 deduplicated)") +
+  guides(fill = guide_legend(title = "Viral load")) +
+ theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_y_log10() +
+  scale_fill_manual(values = cols4, label = c(expression("10"^"2"), expression("10"^"3"), expression("10"^"5")))
+
+FLU_ME2 <- persite_norm |>
+  filter(virus == "Influenza_B_virus") |>
+  filter(type == "dedup_TE") |>
+  filter(Background == "p2") |>
+  rename(Viral.load = `Viral load`) |>
+  ggplot(aes(
+    x = site,
+    y = coverage,
+    fill = as.character(Viral.load)
+  )) +
+  geom_col() +
+  facet_grid(seg ~ Sample_id) +
+  ylab("Coverage") +
+  ggtitle("Influenza B virus (Background 2 deduplicated)") +
+  guides(fill = guide_legend(title = "Viral load")) +
+ theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top", 
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  scale_y_log10() +
+  scale_fill_manual(values = cols4, label = c(expression("10"^"2"), expression("10"^"3"), expression("10"^"5")))
+
+
+ggarrange(FLU_ME1, FLU_ME2, ncol = 2, common.legend = TRUE)
+
+```
+
+####***Final plot***
+```{r}
+
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S8.pdf",
+       width=20,
+       height=12,
+       dpi=600)
+
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S8.png",
+       width=20,
+       height=12)
 ```
 
 
@@ -1736,36 +1915,13 @@ persite_norm |>
 
 ### Figure S9
 ```{r}
-persite_norm |>
-  filter(Background != "p6") |>
-  filter(Background != "control") |>
-  filter(type == "dedup_TE") |>
-  filter(virus == "Human_betaherpesvirus") |>
-  ggplot(aes(x = site, y = coverage, fill = Background)) +
-  geom_polygon() +
-  facet_wrap(Viral.load ~ Sample_id) +
-  ylab("log10(Coverage)") +
-  ggtitle("Human Betaherpesvirus (deduplicated)") +
-  guides(fill = guide_legend(title = "Background")) +
-  theme_bw() +
-  scale_y_log10() +
-  scale_fill_manual(values = cols2, labels = c("P1", "P2"))
 
-#ggsave("figures/compare_spike_ins_atcc/HBHV_coverage_test.pdf",width=20,height=18)
-```
-
-
-
-### --------------------
-
-### Figure S10
-```{r}
-#have to do these differently due to segmentation
-
-FLU_ME1 <- persite_norm |>
-  filter(virus == "Influenza_B_virus") |>
+REO_ME1 <- 
+  persite_norm |>
+  filter(virus == "Mammalian_orthoreovirus3") |>
   filter(type == "dedup_TE") |>
   filter(Background == "p2") |>
+  rename(Viral.load = `Viral load`) |>
   ggplot(aes(
     x = site,
     y = coverage,
@@ -1774,17 +1930,32 @@ FLU_ME1 <- persite_norm |>
   geom_col() +
   facet_grid(seg ~ Sample_id) +
   ylab("log10(Coverage)") +
-  ggtitle("Influenza B virus (Background 1 deduplicated)") +
+  ggtitle("Mammalian orthoreovirus 3 (Background 1 deduplicated)") +
   guides(fill = guide_legend(title = "Viral load")) +
-  theme_bw() +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top",
+    panel.grid.major = element_line(linewidth = 0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth = 0.1, color = "lightgray")
+  ) +
   scale_y_log10() +
   scale_fill_manual(values = cols4,
-                    labels = c("1e+02", "1e+03", "1e+05"))
+                    label = c(
+                      expression("10" ^ "2"),
+                      expression("10" ^ "3"),
+                      expression("10" ^ "5")
+                    ))
 
-FLU_ME2 <- persite_norm |>
-  filter(virus == "Influenza_B_virus") |>
+REO_ME2 <- 
+  persite_norm |>
+  filter(virus == "Mammalian_orthoreovirus3") |>
   filter(type == "dedup_TE") |>
   filter(Background == "p8") |>
+  rename(Viral.load = `Viral load`) |>
   ggplot(aes(
     x = site,
     y = coverage,
@@ -1793,67 +1964,40 @@ FLU_ME2 <- persite_norm |>
   geom_col() +
   facet_grid(seg ~ Sample_id) +
   ylab("log10(Coverage)") +
-  ggtitle("Influenza B virus (Background 2 deduplicated)") +
+  ggtitle("Mammalian orthoreovirus 3 (Background 2 deduplicated)") +
   guides(fill = guide_legend(title = "Viral load")) +
-  theme_bw() +
-  scale_y_log10() +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top",
+    panel.grid.major = element_line(linewidth = 0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth = 0.1, color = "lightgray")
+  ) + scale_y_log10() +
   scale_fill_manual(values = cols4,
-                    labels = c("1e+02", "1e+03", "1e+05"))
-
-ggarrange(FLU_ME1, FLU_ME2, ncol = 2, common.legend = TRUE)
-
-#ggsave("figures/manuscript_figures_pdf/FigureS9.pdf",width=20,height=18)
-```
-
-
-### --------------------
-
-### Figure S11
-```{r}
-
-REO_ME1 <- persite_norm |>
-filter(virus == "Mammalian_orthoreovirus3") |>
-filter(type == "dedup_TE") |>
-filter(Background == "p2") |>
-ggplot(aes(
-x = site,
-y = coverage,
-fill = as.character(Viral.load)
-)) +
-geom_col() +
-facet_grid(seg ~ Sample_id) +
-ylab("log10(Coverage)") +
-ggtitle("Mammalian orthoreovirus 3 (Background 1 deduplicated)") +
-guides(fill = guide_legend(title = "Viral load")) +
-theme_bw() +
-scale_y_log10() +
-scale_fill_manual(values = cols4,
-labels = c("1e+02", "1e+03", "1e+05"))
-
-REO_ME2 <- persite_norm |>
-filter(virus == "Mammalian_orthoreovirus3") |>
-filter(type == "dedup_TE") |>
-filter(Background == "p8") |>
-ggplot(aes(
-x = site,
-y = coverage,
-fill = as.character(Viral.load)
-)) +
-geom_col() +
-facet_grid(seg ~ Sample_id) +
-ylab("log10(Coverage)") +
-ggtitle("Mammalian orthoreovirus 3 (Background 2 deduplicated)") +
-guides(fill = guide_legend(title = "Viral load")) +
-theme_bw() +
-scale_y_log10() +
-scale_fill_manual(values = cols4,
-labels = c("1e+02", "1e+03", "1e+05"))
+                    label = c(
+                      expression("10" ^ "2"),
+                      expression("10" ^ "3"),
+                      expression("10" ^ "5")
+                    ))
 
 ggarrange(REO_ME1, REO_ME2, ncol = 2, common.legend = TRUE)
 
-#ggsave("figures/manuscript_figures_pdf/FigureS10.pdf",width=20,height=18)
+```
 
+####***Final plot***
+```{r}
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S9.pdf",
+       width=20,
+       height=12,
+       dpi=600)
 
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S9.png",
+       width=20,
+       height=12,
+       dpi=600)
 ```
 
 
