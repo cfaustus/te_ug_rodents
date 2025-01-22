@@ -1236,7 +1236,7 @@ ggsave("figures/manuscript_figure_2025/PDF/Figure_S3.pdf",
 
 ### --------------------
 
-## Not required ?Figure S4
+## No longer required? Figure S4
 
 ### Make plots
 ```{r}
