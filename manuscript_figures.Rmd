@@ -2126,8 +2126,8 @@ nodedup_viral_reads <-
 facet_names <- c(
   "Msp_p2" = "P1",
   "Msp_p8" = "P2",
-  "off_target" = "Off target viruses",
-  "on_target" = "On target viruses"
+  "off_target" = "Background",
+  "on_target" = "Spike-in"
 )
 
 cols <-
@@ -2158,12 +2158,13 @@ dedup_reads <-
   facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
   theme_few() + 
   scale_x_log10() +
-  ylab("Log (Viral Reads)") + 
-  xlab("Log (Viral load)") + 
+  ylab("Viral Reads") + 
+  xlab("Viral load (gc/ml)") + 
   scale_color_manual(values = cols) +
+  scale_linetype_manual(values=c("solid", "dotted"))+ 
   theme(
     axis.title.x = element_text(size = 12),
-    axis.text.x = element_text(angle = 30, hjust = 1),
+    # axis.text.x = element_text(angle = 30, hjust = 1),
     axis.title.y = element_text(size = 12),
     legend.title = element_blank(),
     legend.position = "top", 
@@ -2182,12 +2183,13 @@ dedup_prop_viral <-
   theme_few() + 
   scale_x_log10() +
   scale_y_log10() +
+    scale_linetype_manual(values=c("solid", "dotted"))+ 
   ylab("Proportion of viral reads") +
-  xlab("Log (Viral load)") + 
+  xlab("Viral load (gc/ml)") + 
   scale_color_manual(values = cols) +
     theme(
     axis.title.x = element_text(size = 12),
-    axis.text.x = element_text(angle = 30, hjust = 1),
+    # axis.text.x = element_text(angle = 30, hjust = 1),
     axis.title.y = element_text(size = 12),
     legend.title = element_blank(),
     legend.position = "top", 
@@ -2207,12 +2209,14 @@ dedup_prop_all <-
   scale_x_log10() +
   scale_y_log10(limits=c(5e-8,1)) +
   ylab("Proportion of total reads") +
-  xlab("Log (Viral load)") + 
+  xlab("Viral load (gc/ml)") + 
+  scale_linetype_manual(values=c("solid", "dotted"))+ 
   scale_color_manual(values = cols) +
     theme(
     axis.title.x = element_text(size = 12),
-    axis.text.x = element_text(angle = 30, hjust = 1),
+    # axis.text.x = element_text(angle = 30, hjust = 1),
     axis.title.y = element_text(size = 12),
+    axis.text.y = element_text(hjust = 1),
     legend.title = element_blank(),
     legend.position = "top", 
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
