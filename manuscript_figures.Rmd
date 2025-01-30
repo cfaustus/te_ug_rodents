@@ -2150,7 +2150,7 @@ dedup_reads <-
   filter(Background.sample != "Msp_p6") |>
   ggplot(aes(
     x = Viral.load,
-    y = log10(count),
+    y = (count),
     colour = genus
   )) +
   geom_point() +
@@ -2158,13 +2158,16 @@ dedup_reads <-
   facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
   theme_few() + 
   scale_x_log10() +
+  scale_y_log10() +
   ylab("Viral Reads") + 
   xlab("Viral load (gc/ml)") + 
   scale_color_manual(values = cols) +
-  scale_linetype_manual(values=c("solid", "dotted"))+ 
+  scale_linetype_manual(values=c("solid", "dotted")) + 
+  scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + 
+    scale_y_log10(labels = scales::trans_format("log10", scales::label_math())) +
   theme(
     axis.title.x = element_text(size = 12),
-    # axis.text.x = element_text(angle = 30, hjust = 1),
+    # axis.text.x = element_text(hjust = 1),
     axis.title.y = element_text(size = 12),
     legend.title = element_blank(),
     legend.position = "top", 
@@ -2183,6 +2186,10 @@ dedup_prop_viral <-
   theme_few() + 
   scale_x_log10() +
   scale_y_log10() +
+  scale_x_log10(labels = scales::trans_format("log10",
+                                              scales::label_math())) + 
+  scale_y_log10(labels = scales::trans_format("log10",
+                                              scales::label_math())) +
     scale_linetype_manual(values=c("solid", "dotted"))+ 
   ylab("Proportion of viral reads") +
   xlab("Viral load (gc/ml)") + 
@@ -2206,11 +2213,13 @@ dedup_prop_all <-
   geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
   facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
   theme_few() + 
-  scale_x_log10() +
-  scale_y_log10(limits=c(5e-8,1)) +
+  scale_x_log10(labels = scales::trans_format("log10",
+                                              scales::label_math())) + 
+  scale_y_log10(limits = c(5e-8, 1), breaks = 10**(seq(-6,0,2)),labels = scales::trans_format("log10",
+                                              scales::label_math())) +
+    scale_linetype_manual(values=c("solid", "dotted"))+ 
   ylab("Proportion of total reads") +
   xlab("Viral load (gc/ml)") + 
-  scale_linetype_manual(values=c("solid", "dotted"))+ 
   scale_color_manual(values = cols) +
     theme(
     axis.title.x = element_text(size = 12),
@@ -2222,6 +2231,7 @@ dedup_prop_all <-
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   )
+
 
 ```
 
@@ -2243,7 +2253,6 @@ ggarrange(
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.width=7, fig.height=8}
 
-#ggsave("figures/compare_spike_ins_atcc/target_offtarget_dedup.png",width=8,height=10)
 
 ##just plot viral reads and prop viral
 
@@ -2255,10 +2264,13 @@ ggarrange(
   align = "hv"
 )
 
-ggsave("figures/compare_spike_ins_atcc/target_offtarget_dedup_2025-01-01.png", width = 10, height = 8)
+# ggsave("figures/compare_spike_ins_atcc/target_offtarget_dedup_2025-01-01.png", width = 10, height = 8)
 
-ggsave("figures/manuscript_figures_pdf/Figure_3_2025-01-01.pdf", width = 10, height = 8)
+ggsave("figures/manuscript_figure_2025/PDF/Figure_3.pdf", 
+       width = 10, height = 8)
 
+ggsave("figures/manuscript_figure_2025/PNG/Figure_3.png", 
+       width = 10, height = 8)
 ```
 
 ### ----nodedup results ----
