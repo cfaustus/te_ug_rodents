@@ -197,6 +197,7 @@ lm_combined <-
 
 #### Make plot
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
+
 ggplot() +
   geom_point(data = depths_reads_sub,
              mapping = aes(Viral.load, mean_depth, color = virus)) +
@@ -236,8 +237,8 @@ ggplot() +
     axis.title.y = element_text(size = 10),
     legend.title = element_blank()
   ) +
-    xlab("Log (Viral load)") + 
-  ylab("Log (Mean Read Depth)") +
+    xlab("Viral load (gc/ml)") + 
+  ylab("Mean Read Depth") +
   scale_color_manual(values = cols) +
   guides(color = FALSE) +
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + 
