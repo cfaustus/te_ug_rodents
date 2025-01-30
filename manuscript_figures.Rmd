@@ -2273,94 +2273,318 @@ ggsave("figures/manuscript_figure_2025/PDF/Figure_3.pdf",
 ggsave("figures/manuscript_figure_2025/PNG/Figure_3.png", 
        width = 10, height = 8)
 ```
+### --------------------
 
-### ----nodedup results ----
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.width=6}
-##extras - no dedup
+### Figure S10
 
-nodedup_reads <-
-  nodedup_viral_reads |>
-  filter(Background.sample != "Neg_control") |>
-  filter(Background.sample != "Msp_p6") |>
-  ggplot(aes(
-    x = Viral.load,
-    y = log10(count),
-    colour = genus
-  )) +
-  geom_point() +
-  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
-  facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
-  theme_few() +
-  theme(
-    axis.title.x = element_text(size = 12),
-    axis.text.x = element_text(angle = 0, hjust = 1),
-    axis.title.y = element_text(size = 12),
-    legend.title = element_blank(),
-    legend.position = "top", 
-    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-  ) +
-  scale_x_log10() +
-  ylab("log10(Viral Reads)") +
-  scale_color_manual(values = cols)
+#### Read-in data
+```{r}
 
-nodedup_prop_viral <- 
-  nodedup_viral_reads |>
-  filter(Background.sample != "Neg_control") |>
-  filter(Background.sample != "Msp_p6") |>
-  ggplot(aes(x = Viral.load, y = prop_viral, colour = genus)) +
-  geom_point() +
-  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
-  facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
-  theme_few() +
-  theme(
-    axis.title.x = element_text(size = 12),
-    axis.text.x = element_text(angle = 0, hjust = 1),
-    axis.title.y = element_text(size = 12),
-    legend.title = element_blank(),
-    legend.position = "top", 
-    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-  ) +
-  scale_x_log10() +
-  scale_y_log10() +
-  ylab("Proportion of viral reads") +
-  scale_color_manual(values = cols)
 
-nodedup_prop_all <- nodedup_viral_reads |>
-  filter(Background.sample != "Neg_control") |>
-  filter(Background.sample != "Msp_p6") |>
-  ggplot(aes(x = Viral.load, y = prop_total, colour = genus)) +
-  geom_point() +
-  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
-  facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
-  theme_few() +
-  theme(
-    axis.title.x = element_text(size = 12),
-    axis.text.x = element_text(angle = 0, hjust = 1),
-    axis.title.y = element_text(size = 12),
-    legend.title = element_blank(),
-    legend.position = "top", 
-    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-  ) +
-  scale_x_log10() +
-  scale_y_log10() +
-  ylab("Proportion of total reads") +
-  scale_color_manual(values = cols)
+####read counts/normalised read counts####
 
-ggarrange(
-  nodedup_reads,
-  nodedup_prop_all,
-  nodedup_prop_viral,
-  nrow = 3,
-  common.legend = TRUE,
-  align = "hv"
-)
+#import and combine read count files
 
-#ggsave("figures/compare_spike_ins_atcc/target_offtarget_nodedup.pdf",width=8,height=10)
+gm_readcount_dedup <-
+  read.table(
+    "data_genome_medicine/genome_medicine_TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+gm_readcount_nodedup <-
+  read.table(
+    "data_genome_medicine/genome_medicine_TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+gm_counts_all <- rbind(gm_readcount_dedup, gm_readcount_nodedup)
 
 ```
 
-### --------------------
+#### read counts 
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#normalise by both raw read count and genome length - should be the same as mean read depth
+
+facet_names <- c("dedup_GM_TE" = "Deduplicated",
+                 "nodedup_GM_TE" = "Non-Deduplicated")
+
+cols <- c("#4477AA",
+          "#66CCEE",
+          "#228833",
+          "#CCBB44",
+          "#EE6677",
+          "#AA3377")
+
+gm_counts_norm <- 
+  gm_counts_all |>
+  mutate(norm_counts3 = matched / length)
+
+read_counts <- 
+  gm_counts_norm |>
+  filter(Viral.load != 0) |>
+  ggplot(aes(
+    x = Viral.load,
+    y = (matched),
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus), se = FALSE, span = 0.85) +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    # axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top",
+    panel.grid.major = element_line(linewidth = 0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth = 0.1, color = "lightgray")
+  ) +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  ylab("Viral Reads") +
+  xlab("Viral load (gc/ml)") + 
+  scale_x_log10(labels = scales::trans_format("log10",
+                                              scales::label_math())) + 
+  scale_y_log10(labels = scales::trans_format("log10",
+                                              scales::label_math()))
+
+```
+
+#### read depth
+```{r}
+#import and combine read depth files
+
+depth_dedup_gm <-
+  read.table(
+    "data_genome_medicine/genome_medicine_TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+depth_nodedup_gm <-
+  read.table(
+    "data_genome_medicine/genome_medicine_TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+depths_gm_all <- rbind(depth_dedup_gm, depth_nodedup_gm)
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+read_depths <- 
+  depths_gm_all |>
+  filter(Viral.load != 0) |>
+  ggplot(aes(
+    x = Viral.load,
+    y = mean_depth,
+    colour = virus
+  )) +
+  geom_point() +
+  geom_smooth(aes(group = virus), se = FALSE, span = 0.9) +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    # axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.title.y = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top",
+    panel.grid.major = element_line(linewidth = 0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth = 0.1, color = "lightgray")
+  ) +
+  scale_color_manual(
+    values = cols,
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  ) +
+  ylab("Mean read depth") +
+  xlab("Viral load (gc/ml)") + 
+  scale_x_log10(labels = scales::trans_format("log10",
+                                              scales::label_math())) + 
+  scale_y_log10(labels = scales::trans_format("log10",
+                                              scales::label_math()))
+
+
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggarrange(read_counts,
+          read_depths,
+          nrow = 2,
+          common.legend = TRUE)
+
+
+#PDF
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S10.pdf", 
+       width = 7,
+       height = 7)
+
+#PNG
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S10.png", 
+       width = 7,
+       height = 7)
+
+```
+
+### Figure S11
+
+#### Read-in data
+```{r}
+####genome coverage####
+
+unzip(zipfile = "data_genome_medicine/genome_medicine_TE_sequencing_experiment_readdepth_per_site_sample_and_virus_bowtie2_dedup_atcc_ref.tsv.zip", exdir = "data_genome_medicine/")
+
+dedup_per_site <-
+  read.table(
+    "data_genome_medicine/genome_medicine_TE_sequencing_experiment_readdepth_per_site_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+file.remove("data_genome_medicine/genome_medicine_TE_sequencing_experiment_readdepth_per_site_sample_and_virus_bowtie2_dedup_atcc_ref.tsv")
+
+#View(dedup_per_site)
+
+counts_dedup_bt <-
+  read.table(
+    "data_TE/TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+#add length column from read depth file to per site file
+
+lengths <- 
+  counts_dedup_bt |>
+  select(virus,length) |>
+  distinct()
+
+#calculate genome coverage
+
+coverage <- 
+  dedup_per_site |>
+  group_by(sample_id, virus, Viral.load, Replicate) |>
+  filter(coverage > 0) |>
+  summarise(genome_coverage = n()) |>
+  left_join(lengths) |>
+  mutate(percent_coverage = genome_coverage / length)
+
+coverage |>
+  filter(Viral.load != 0) |>
+  ggplot(aes(x = virus, y = percent_coverage)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(position = position_dodge(width = .75)) +
+  facet_grid( ~ as.character(Viral.load)) +
+  theme_bw() +
+  theme(axis.title.y = element_text(size = 10)) +
+  ylab("Genome coverage") +
+  theme_few() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title.y = element_text(size = 15),
+    axis.text = element_text(size = 12),
+    strip.text = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position = "top",
+    panel.grid.major = element_line(linewidth = 0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth = 0.1, color = "lightgray")
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+    scale_x_discrete(
+    labels = c(
+      "Human adenovirus 40",
+      "Human betaherpesvirus",
+      "Human respiratory syncytial virus",
+      "Influenza B virus",
+      "Mammalian orthoreovirus 3",
+      "Zika virus"
+    )
+  )
+
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/genome_medicine/all_genome_coverage.png",width=14,height=6)
+
+#ggsave("/Users/laura/Dropbox/glasgow/github/te_ug_rodents/figures/manuscript_figures_pdf/FigureS12.pdf",width=20,height=6)
+```
+
+#### *** Final plot ***
+```{r}
+#PDF
+ggsave(
+  "figures/manuscript_figure_2025/PDF/Figure_S11.pdf",
+  width = 14,
+  height = 6
+)
+
+#PNG
+ggsave(
+  "figures/manuscript_figure_2025/PNG/Figure_S11.png",
+  width = 14,
+  height = 6
+)
+
+```
+
+### Figure S12
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+####per site plot AdV only####
+
+dedup_per_site |>
+  filter(virus == "Human_adenovirus_40") |>
+  filter(Viral.load != 0) |>
+  ggplot(aes(x=site,y=coverage))+
+  geom_col()+
+  facet_grid(Viral.load~Replicate)+
+  ylab("Coverage per site")+
+  ggtitle("Human Adenovirus (deduplicated)")+
+  theme_few() +
+  theme(
+    # axis.title.x = element_text(size = 12),
+    # # axis.text.x = element_text(angle = 30, hjust = 1),
+    # axis.title.y = element_text(size = 12),
+    # legend.title = element_blank(),
+    # legend.position = "top",
+    panel.grid.major = element_line(linewidth = 0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth = 0.1, color = "lightgray")
+  ) +  
+  scale_y_log10(labels = scales::trans_format("log10",
+                                              scales::label_math())) +
+
+  xlab("site position")
+
+```
+
+#### *** Final plot ***
+```{r}
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S12.pdf",
+       width=12,
+       height=10)
+
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S12.png",
+       width=12,
+       height=10)
+```
 
