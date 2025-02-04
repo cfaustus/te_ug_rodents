@@ -1,0 +1,10 @@
+contig_name,Sample_id,Background,Viral load,mean_depth,median_depth,min,max,LQ,UQ,mapper,type,virus
+k97_36039,RNA-Msp-p1,S38,NA,116.49143268538516,14,0,1158,0,141,bowtie2,dedup_polyomics,cardiovirus
+k97_36039,RNA-Msp-p2,S18,NA,54.73002159827214,13,0,455,1,81,bowtie2,dedup_polyomics,cardiovirus
+k97_36039,RNA-Msp-p3,S39,NA,6.346004319654427,1,0,72,0,7,bowtie2,dedup_polyomics,cardiovirus
+k97_36039,RNA-Msp-p4,S40,NA,596.7616990640748,320,0,3012,34,946,bowtie2,dedup_polyomics,cardiovirus
+k97_36039,RNA-Msp-p5,S41,NA,245.36702663786897,61,0,2378,5,322,bowtie2,dedup_polyomics,cardiovirus
+k97_36039,RNA-Msp-p6,S19,NA,39.79755219582433,27,0,277,4,57,bowtie2,dedup_polyomics,cardiovirus
+k97_36039,RNA-Msp-p7,S42,NA,335.845788336933,306,3,1240,158,460,bowtie2,dedup_polyomics,cardiovirus
+k97_36039,RNA-Msp-p8,S43,NA,3.9775377969762418,0,0,52,0,3,bowtie2,dedup_polyomics,cardiovirus
+k97_36039,RNA-Msp-p9,S44,NA,0.17350611951043918,0,0,4,0,0,bowtie2,dedup_polyomics,cardiovirus

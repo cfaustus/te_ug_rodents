@@ -2615,11 +2615,37 @@ cardio_depth <-
     header = TRUE
   )
 
-depth_both <- rbind(kobu_depth, cardio_depth)
+cardio_depth_poly <- 
+  read.table(
+    "data_cardiovirus/cardiovirus_denovo_bowtie2_readdepth_per_sample_dedup_polyomics.tsv",
+    sep = ",",
+    header = TRUE
+  ) |>
+  select(-contig_name) |>
+  filter(Background %in% c("S18", "S19", "S43")) |>
+  select(-Background) |>
+  separate(Sample_id, into = c(NA, NA, "Background"), sep = "-", remove = FALSE)
 
-depth_both$type <- depth_both$type %>%
+depth_both <- rbind(kobu_depth, cardio_depth, cardio_depth_poly) |>
+  mutate(Viral.load = ifelse(is.na(Viral.load), 0, Viral.load))
+
+depth_both$type <- depth_both$type |>
   case_match("dedup_TE" ~ "dedup",
+             "dedup_polyomics" ~ "dedup",
              .default = depth_both$type)
+
+depth_both$Sample_id <- depth_both$Sample_id |>
+  case_match("RNA-Msp-p2" ~ "P1",
+             "RNA-Msp-p8" ~ "P2",
+             "RNA-Msp-p6" ~ "P3",
+             .default = depth_both$Sample_id
+             )
+
+depth_both$virus <- depth_both$virus |>
+  case_match("cardiovirus" ~ "Cardiovirus",
+             "k97_19971" ~ "Kobuvirus",
+             .default = depth_both$virus
+             )
 
 cols2 <- c("#BB5566", "#004488")
 
@@ -2635,43 +2661,74 @@ coverage_labels <- c(
 #### *** Final plot ***
 ```{r}
 
-depth_both |>
+depth_both$Viral.load <- factor(depth_both$Viral.load, labels = c("Shotgun",
+    "10^{2}", 
+    "10^{3}", 
+    "10^{5}"
+    ))
+
+
+# depth_both |>
+#   filter(Background != "p6") |>
+#   filter(type == "dedup") |>
+#   filter(mapper == "bowtie2") |>
+#   filter(Viral.load != "NA") |>
+#   ggplot(aes(
+#     x = Viral.load,
+#     y = (mean_depth),
+#     colour = Background
+#   )) +
+#   geom_point() +
+#  theme_few() +
+#   theme(
+#     axis.title.x = element_text(size = 12),
+#     axis.title.y = element_text(size = 12),
+#     legend.title = element_blank(),
+#     legend.position = "none", 
+#     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+#     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+#   ) +  
+#   facet_grid(Background ~ virus, labeller = as_labeller(coverage_labels)) +
+#   scale_color_manual(values = cols2) +
+#   ylab("Mean read depth") +
+#     xlab("Spike-in viral load (gc/ml)") +
+#    scale_x_log10(labels = scales::trans_format("log10",
+#                                         scales::label_math())) + 
+#   scale_y_log10(labels = scales::trans_format("log10",
+#                                         scales::label_math()))
+
+# replotting S13 in similar way to S14
+depth_both %>%
   filter(Background != "p6") |>
   filter(type == "dedup") |>
   filter(mapper == "bowtie2") |>
-  filter(Viral.load != "NA") |>
-  ggplot(aes(
-    x = Viral.load,
-    y = (mean_depth),
-    colour = Background
-  )) +
+  # filter(Viral.load != "NA") |>
+  ggplot(aes(x = Sample_id, y = mean_depth, color = Background)) +
   geom_point() +
+  ylab("Mean read depth") +
+  xlab("Sample ID") +
+  facet_grid(virus ~ Viral.load,
+             scales = "free_x",
+             label = label_parsed) +
+  scale_color_manual(values = cols2, labels = c("P1", "P2")) +
  theme_few() +
   theme(
     axis.title.x = element_text(size = 12),
     axis.title.y = element_text(size = 12),
     legend.title = element_blank(),
-    legend.position = "none", 
+    legend.position = "right", 
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-  ) +  
-  facet_grid(Background ~ virus, labeller = as_labeller(coverage_labels)) +
-  scale_color_manual(values = cols2) +
-  ylab("Mean read depth") +
-    xlab("Spike-in viral load (gc/ml)") +
-
-   scale_x_log10(labels = scales::trans_format("log10",
-                                              scales::label_math())) + 
+  )+
   scale_y_log10(labels = scales::trans_format("log10",
-                                              scales::label_math()))
+                                        scales::label_math()))
 
 
-
-ggsave("figures/manuscript_figure_2025/PDF/Figure_S13.pdf",
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S13_v2.pdf",
        width=8,
        height=4)
 
-ggsave("figures/manuscript_figure_2025/PNG/Figure_S13.png",
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S13_v2.png",
        width=8,
        height=4)
 
