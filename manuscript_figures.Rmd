@@ -409,7 +409,9 @@ read_count <-
     )
   ) +
   scale_linetype_manual(values=c(2, 1)) +
-  ylab("log10(Viral Reads)") +
+  ylab(" Log (Viral Reads)") +
+  scale_linetype_manual(values=c("dotted", "solid")) + 
+  ylab("Log (Viral Reads)") +
   xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
 
@@ -446,8 +448,8 @@ read_count_norm1 <-
       "Zika virus"
     )
   ) +
-  scale_linetype_manual(values=c(2, 1)) +
-  ylab("log10(viral reads/cleaned reads)") +
+  scale_linetype_manual(values=c(3, 1)) +
+  ylab("Log (viral reads/cleaned reads)") +
   xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
 
@@ -486,7 +488,7 @@ read_count_norm2 <-
       "Zika virus"
     )
   ) +
-  scale_linetype_manual(values=c(2, 1)) +
+  scale_linetype_manual(values=c(3, 1)) +
   ylab("Log (viral reads/cleaned reads/genome length)") +
   xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
@@ -525,7 +527,7 @@ read_depths <-
       "Zika virus"
     )
   ) +
-  scale_linetype_manual(values=c(2, 1)) +
+  scale_linetype_manual(values=c(3, 1)) +
   ylab("Log (mean read depth)") +
   xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
@@ -959,7 +961,7 @@ total_reads <-
     scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   # ggtitle("All") +
   ylab("Total number of reads") +
-  scale_color_manual(values = cols2, labels = c("P1", "P2"))
+  scale_color_manual(values = cols2, labels = c("M1", "M2"))
 
 viral_reads <- 
   reads_plot |>
@@ -983,7 +985,7 @@ viral_reads <-
     scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   # ggtitle("Viral reads") +
   ylab("Number of viral reads") +
-  scale_color_manual(values = cols2, labels = c("P1", "P2"))
+  scale_color_manual(values = cols2, labels = c("M1", "M2"))
 
 ATCC_reads <- 
   reads_plot |>
@@ -1007,7 +1009,7 @@ ATCC_reads <-
     scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   ggtitle("Spike-in Viral Reads") +
   ylab("Spike-in Viral Reads") +
-  scale_color_manual(values = cols2, labels = c("P1", "P2"))
+  scale_color_manual(values = cols2, labels = c("M1", "M2"))
 
 prop_ATCC <- reads_plot |>
   filter(Background != "p6") |>
@@ -1025,7 +1027,7 @@ prop_ATCC <- reads_plot |>
     scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   ggtitle("Spike-in viral reads") +
   ylab("Proportion") +
-  scale_color_manual(values = cols2, labels = c("P1", "P2"))
+  scale_color_manual(values = cols2, labels = c("M1", "M2"))
 
 prop_viral <- reads_plot |>
   filter(Background != "p6") |>
@@ -1043,7 +1045,7 @@ prop_viral <- reads_plot |>
  scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   # ggtitle("Viral reads") +
   ylab("Proportion of viral reads") +
-  scale_color_manual(values = cols2, labels = c("P1", "P2")) + scale_y_continuous(limits=c(0,1.0))
+  scale_color_manual(values = cols2, labels = c("M1", "M2")) + scale_y_continuous(limits=c(0,1.0))
 
 
 #ggarrange(total_reads,viral_reads,ATCC_reads,prop_viral,prop_ATCC,nrow=2,ncol=3,common.legend = TRUE)
@@ -1126,8 +1128,8 @@ ggsave("figures/manuscript_figure_2025/PNG/Figure_S3.png",
 facet_names_bg <- c(
   "dedup_TE" = "Deduplicated",
   "nodedup_TE" = "Non-Deduplicated",
-  "p2" = "P1",
-  "p8" = "P2"
+  "p2" = "M1",
+  "p8" = "M2"
 )
 
 #break down by Background x virus
@@ -1164,7 +1166,7 @@ background_counts_reads <-
       )
   ) +
   scale_x_log10(labels = scales::label_log10()) +
-  ylab("log10(Viral Reads)")
+  ylab("Log (Viral Reads)")
 
 backgrounds_counts_reads_norm <- 
   counts_reads_norm |>
@@ -1198,7 +1200,7 @@ backgrounds_counts_reads_norm <-
     )
   ) +
   scale_x_log10(label = scales::label_log10()) +
-  ylab("log10(viral reads/cleaned reads)")
+  ylab("Log (viral reads/cleaned reads)")
 
 backgrounds_counts_reads_norm2 <- 
   counts_reads_norm |>
@@ -1231,7 +1233,7 @@ backgrounds_counts_reads_norm2 <-
     )
   ) +
   scale_x_log10(labels = scales::label_log10()) +
-  ylab("log10(viral reads/cleaned reads/genome length)")
+  ylab("Log (viral reads/cleaned reads/genome length)")
 
 background_read_depths <- 
   depths_reads |>
@@ -1265,7 +1267,7 @@ background_read_depths <-
     )
   ) +
   scale_x_log10(label = scales::label_log10()) +
-  ylab("log10(mean read depth)")
+  ylab("Log (mean read depth)")
 
 ```
 
@@ -1461,7 +1463,7 @@ persite_coverage_both |>
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
-  scale_color_manual(values = cols2, labels = c("P1", "P2")) +
+  scale_color_manual(values = cols2, labels = c("M1", "M2")) +
   scale_x_discrete(
     labels = c(
       "Human adenovirus 40",
@@ -1514,8 +1516,8 @@ persite_norm <- persite_reads |>
 coverage_labels3 <-c("100" = "1e+02",
                     "1000" = "1e+03",
                     "100000" = "1e+05",
-                    "p2" = "P1",
-                    "p8"= "P2")
+                    "p2" = "M1",
+                    "p8"= "M2")
 
 persite_norm$`Viral load` <- 
   factor(persite_norm$`Viral load`, 
@@ -1548,7 +1550,7 @@ persite_norm |>
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
   scale_y_log10() +
-  scale_fill_manual(values = cols2, labels = c("P1", "P2"))
+  scale_fill_manual(values = cols2, labels = c("M1", "M2"))
 ```
 
 #### ***Final plot***
@@ -1591,7 +1593,7 @@ persite_norm |>
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
   scale_y_log10() +
-  scale_fill_manual(values = cols2, labels = c("P1", "P2"))
+  scale_fill_manual(values = cols2, labels = c("M1", "M2"))
 
 ```
 
@@ -1637,7 +1639,7 @@ persite_norm |>
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
   scale_y_log10() +
-  scale_fill_manual(values = cols2, labels = c("P1", "P2"))
+  scale_fill_manual(values = cols2, labels = c("M1", "M2"))
 
 ```
 
@@ -1683,7 +1685,7 @@ persite_norm |>
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
   scale_y_log10() +
-  scale_fill_manual(values = cols2, labels = c("P1", "P2"))
+  scale_fill_manual(values = cols2, labels = c("M1", "M2"))
 
 ```
 
@@ -1724,7 +1726,7 @@ FLU_ME1 <- persite_norm |>
   geom_col() +
   facet_grid(seg ~ Sample_id) +
   ylab("Coverage") +
-  ggtitle("Influenza B virus (Background 1 deduplicated)") +
+  ggtitle("Influenza B virus (Background M1 deduplicated)") +
   guides(fill = guide_legend(title = "Viral load")) +
  theme_few() +
   theme(
@@ -1752,7 +1754,7 @@ FLU_ME2 <- persite_norm |>
   geom_col() +
   facet_grid(seg ~ Sample_id) +
   ylab("Coverage") +
-  ggtitle("Influenza B virus (Background 2 deduplicated)") +
+  ggtitle("Influenza B virus (Background M2 deduplicated)") +
   guides(fill = guide_legend(title = "Viral load")) +
  theme_few() +
   theme(
@@ -1804,8 +1806,8 @@ REO_ME1 <-
   )) +
   geom_col() +
   facet_grid(seg ~ Sample_id) +
-  ylab("log10(Coverage)") +
-  ggtitle("Mammalian orthoreovirus 3 (Background 1 deduplicated)") +
+  ylab("Coverage") +
+  ggtitle("Mammalian orthoreovirus 3 (Background M1 deduplicated)") +
   guides(fill = guide_legend(title = "Viral load")) +
   theme_few() +
   theme(
@@ -1838,8 +1840,8 @@ REO_ME2 <-
   )) +
   geom_col() +
   facet_grid(seg ~ Sample_id) +
-  ylab("log10(Coverage)") +
-  ggtitle("Mammalian orthoreovirus 3 (Background 2 deduplicated)") +
+  ylab("Coverage") +
+  ggtitle("Mammalian orthoreovirus 3 (Background M2 deduplicated)") +
   guides(fill = guide_legend(title = "Viral load")) +
   theme_few() +
   theme(
@@ -1999,8 +2001,8 @@ nodedup_viral_reads <-
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 
 facet_names <- c(
-  "Msp_p2" = "P1",
-  "Msp_p8" = "P2",
+  "Msp_p2" = "M1",
+  "Msp_p8" = "M2",
   "off_target" = "Background",
   "on_target" = "Spike-in"
 )
@@ -2035,9 +2037,9 @@ dedup_reads <-
   scale_x_log10() +
   scale_y_log10() +
   ylab("Viral Reads") + 
-  xlab("Viral load (gc/ml)") + 
+  xlab("Genome copies") + 
   scale_color_manual(values = cols) +
-  scale_linetype_manual(values=c("solid", "dotted")) + 
+  scale_linetype_manual(values=c("dotted", "solid")) + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + 
     scale_y_log10(labels = scales::trans_format("log10", scales::label_math())) +
   theme(
@@ -2065,9 +2067,9 @@ dedup_prop_viral <-
                                               scales::label_math())) + 
   scale_y_log10(labels = scales::trans_format("log10",
                                               scales::label_math())) +
-    scale_linetype_manual(values=c("solid", "dotted"))+ 
+  scale_linetype_manual(values=c("dotted", "solid")) + 
   ylab("Proportion of viral reads") +
-  xlab("Viral load (gc/ml)") + 
+  xlab("Genome copies") + 
   scale_color_manual(values = cols) +
     theme(
     axis.title.x = element_text(size = 12),
@@ -2092,9 +2094,9 @@ dedup_prop_all <-
                                               scales::label_math())) + 
   scale_y_log10(limits = c(5e-8, 1), breaks = 10**(seq(-6,0,2)),labels = scales::trans_format("log10",
                                               scales::label_math())) +
-    scale_linetype_manual(values=c("solid", "dotted"))+ 
+  scale_linetype_manual(values=c("dotted", "solid")) + 
   ylab("Proportion of total reads") +
-  xlab("Viral load (gc/ml)") + 
+  xlab("Genome copies") + 
   scale_color_manual(values = cols) +
     theme(
     axis.title.x = element_text(size = 12),
@@ -2230,7 +2232,7 @@ read_counts <-
     )
   ) +
   ylab("Viral Reads") +
-  xlab("Viral load (gc/ml)") + 
+  xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10",
                                               scales::label_math())) + 
   scale_y_log10(labels = scales::trans_format("log10",
@@ -2295,7 +2297,7 @@ read_depths <-
     )
   ) +
   ylab("Mean read depth") +
-  xlab("Viral load (gc/ml)") + 
+  xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10",
                                               scales::label_math())) + 
   scale_y_log10(labels = scales::trans_format("log10",
@@ -2509,9 +2511,9 @@ depth_both$type <- depth_both$type |>
              .default = depth_both$type)
 
 depth_both$Sample_id <- depth_both$Sample_id |>
-  case_match("RNA-Msp-p2" ~ "P1",
-             "RNA-Msp-p8" ~ "P2",
-             "RNA-Msp-p6" ~ "P3",
+  case_match("RNA-Msp-p2" ~ "M1",
+             "RNA-Msp-p8" ~ "M2",
+             "RNA-Msp-p6" ~ "M3",
              .default = depth_both$Sample_id
              )
 
@@ -2526,8 +2528,8 @@ cols2 <- c("#BB5566", "#004488")
 coverage_labels <- c(
   "k97_19971" = "Kobuvirus",
   "cardiovirus" = "Cardiovirus",
-  "p2" = "P1",
-  "p8" = "P2"
+  "p2" = "M1",
+  "p8" = "M2"
 )
 
 ```
@@ -2584,7 +2586,7 @@ depth_both %>%
   facet_grid(virus ~ Viral.load,
              scales = "free_x",
              label = label_parsed) +
-  scale_color_manual(values = cols2, labels = c("P1", "P2")) +
+  scale_color_manual(values = cols2, labels = c("M1", "M2")) +
  theme_few() +
   theme(
     axis.title.x = element_text(size = 12),
@@ -2636,13 +2638,13 @@ kobu_per_site$Viral.load <-
   replace_na(., 0)
 
 kobu_per_site$Sample_id <- kobu_per_site$Sample_id %>%
-  case_match("RNA-Msp-p2" ~ "P1",
-             "RNA-Msp-p8" ~ "P2",
+  case_match("RNA-Msp-p2" ~ "M1",
+             "RNA-Msp-p8" ~ "M2",
              .default = kobu_per_site$Sample_id)
 
 kobu_per_site$Background <- kobu_per_site$Background %>%
-  case_match("p2" ~ "P1",
-             "p8" ~ "P2",
+  case_match("p2" ~ "M1",
+             "p8" ~ "M2",
              .default = kobu_per_site$Background)
 
 cardio_per_site <-
@@ -2698,15 +2700,15 @@ cardio_TE_polyomics <- cardio_TE_polyomics %>%
   filter(!Sample_id %in% drops)
 
 cardio_TE_polyomics$Sample_id <- cardio_TE_polyomics$Sample_id %>%
-  case_match("RNA-Msp-p2" ~ "P1",
-             "RNA-Msp-p8" ~ "P2",
+  case_match("RNA-Msp-p2" ~ "M1",
+             "RNA-Msp-p8" ~ "M2",
              .default = cardio_TE_polyomics$Sample_id)
 
 cardio_TE_polyomics$Background <- cardio_TE_polyomics$Background %>%
-  case_match("S18" ~ "P1",
-             "S43" ~ "P2",
-             "p2" ~ "P1",
-             "p8" ~ "P2",
+  case_match("S18" ~ "M1",
+             "S43" ~ "M2",
+             "p2" ~ "M1",
+             "p8" ~ "M2",
              .default = cardio_TE_polyomics$Background)
 
 persite_both <- rbind(kobu_per_site, cardio_TE_polyomics)
@@ -2749,8 +2751,8 @@ coverage_labels2 <- c(
   "N" = "N",
   "O" = "O",
   "P" = "P",
-  "ME_P1" = "P1",
-  "ME_P2" = "P2"
+  "ME_P1" = "M1",
+  "ME_P2" = "M2"
 )
 
 kobu_coverage <- kobu_per_site %>%
@@ -2792,7 +2794,7 @@ coverage_both %>%
   facet_grid(virus ~ (Viral.load),
              scales = "free_x",
              label = label_parsed) +
-  scale_color_manual(values = cols2, labels = c("P1", "P2")) +
+  scale_color_manual(values = cols2, labels = c("M1", "M2")) +
  theme_few() +
   theme(
     axis.title.x = element_text(size = 12),
@@ -2860,7 +2862,7 @@ persite_both |>
     panel.grid.minor = element_line(linewidth = 0.1, color = "lightgray")
   ) +   
   facet_wrap(Viral.load ~ Sample_id, labeller = label_parsed) +
-  scale_fill_manual(values = cols2, labels = c("P1", "P2")) +
+  scale_fill_manual(values = cols2, labels = c("M1", "M2")) +
   ylab("Coverage") +
   xlab("") +
   ggtitle("Kobuvirus") +
@@ -2900,7 +2902,7 @@ persite_both |>
   )) +
   geom_col() +
   facet_wrap(Viral.load ~ Sample_id, labeller = label_parsed) +
-  scale_fill_manual(values = cols2, labels = c("P1", "P2")) +
+  scale_fill_manual(values = cols2, labels = c("M1", "M2")) +
   theme_few() +
   theme(
     axis.title.x = element_text(size = 12),
