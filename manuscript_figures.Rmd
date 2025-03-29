@@ -525,7 +525,11 @@ read_depths <-
       "Zika virus"
     )
   ) +
+<<<<<<< HEAD
   scale_linetype_manual(values=c(2, 1)) +
+=======
+  scale_linetype_manual(values=c("dotted", "solid")) + 
+>>>>>>> fe36adb (update notebook)
   ylab("Log (mean read depth)") +
   xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
