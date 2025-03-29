@@ -237,7 +237,7 @@ ggplot() +
     axis.title.y = element_text(size = 10),
     legend.title = element_blank()
   ) +
-    xlab("Viral load (gc/ml)") + 
+    xlab("Genome copies") + 
   ylab("Mean Read Depth") +
   scale_color_manual(values = cols) +
   guides(color = FALSE) +
@@ -260,12 +260,15 @@ ggsave("figures/manuscript_figure_2025/PNG/Figure_1.png",
 
 ```
 
+
 ### --------------------
 
-## >>>> now redundant? - Figure 1: plots of TE experiment data - read counts and read depths 
+## Figure S1
 
-### Read-in data
+### Read counts
 ```{r}
+### Read-in data
+
 #ATCC genomes updated version
 #October 2024
 
@@ -316,6 +319,38 @@ counts_reads_norm <- counts_reads |>
   ) ~ "DNA",
   .default = "RNA"
   ))
+
+```
+
+
+### Read depths
+```{r}
+####read depths####
+
+#import and combine read depth files
+
+depth_dedup_bt <-
+  read_tsv(
+    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv"
+  )
+
+depth_nodedup_bt <-
+  read_tsv(
+    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv"
+  )
+
+depths_bt_all <- rbind(depth_dedup_bt, depth_nodedup_bt)
+
+depths_reads <- 
+  depths_bt_all |>
+  left_join(metadata2, by = "Sample_id") |>
+  mutate(genome_structure = case_when((
+    virus == "Human_adenovirus_40" |
+      virus == "Human_betaherpesvirus"
+  ) ~ "DNA",
+  .default = "RNA"
+  )) |>
+  rename(Viral.load = `Viral load`)
 
 ```
 
@@ -373,15 +408,13 @@ read_count <-
       "Zika virus"
     )
   ) +
+  scale_linetype_manual(values=c(2, 1)) +
   ylab("log10(Viral Reads)") +
-  xlab("Log (Viral load)") + 
+  xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
 
-#ggsave("figures/compare_spike_ins_atcc/read_counts.pdf",width=8,height=6)
-
-#normalise by raw read count
-
-read_count_norm1 <- counts_reads_norm |>
+read_count_norm1 <- 
+  counts_reads_norm |>
   filter(Background != "p6") |>
   filter(Background != "control") |>
   ggplot(aes(
@@ -413,8 +446,9 @@ read_count_norm1 <- counts_reads_norm |>
       "Zika virus"
     )
   ) +
+  scale_linetype_manual(values=c(2, 1)) +
   ylab("log10(viral reads/cleaned reads)") +
-  xlab("Log (Viral load)") + 
+  xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
 
 #normalise by raw read count and genome length
@@ -452,172 +486,11 @@ read_count_norm2 <-
       "Zika virus"
     )
   ) +
+  scale_linetype_manual(values=c(2, 1)) +
   ylab("Log (viral reads/cleaned reads/genome length)") +
-  xlab("Log (Viral load)") + 
+  xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
 
-```
-
-### plot just the two lefthand panels from the original figure
-```{r, warning=FALSE, echo=FALSE, message=FALSE, fig.height=10, fig.width=8}
-
-ggarrange(read_count,
-          read_count_norm2,
-          nrow = 2,
-          common.legend = TRUE)
-
-#ggsave("figures/compare_spike_ins_atcc/log_read_count_depth_2panels.png",width=10,height=7)
-
-
-```
-
-### plot viral read counts (non normalised)
-```{r}
-
-##deduplicated only
-
-read_count_dedup <- 
-  counts_reads_norm |>
-  filter(Background != "p6") |>
-  filter(Background != "control") |>
-  filter(type == "dedup_TE") |>
-  ggplot(aes(
-    x = Viral.load,
-    y = log10(matched),
-    colour = virus
-  )) +
-  geom_point() +
-  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE, method = "lm") +
-  theme_few() +
-  theme(
-    axis.title.x = element_text(size = 12),
-    axis.text.x = element_text(angle = 0, hjust = 1),
-    axis.title.y = element_text(size = 12),
-    legend.title = element_blank(),
-    legend.position = "top", 
-    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-  ) +
-  scale_color_manual(
-    values = cols,
-    labels = c(
-      "Human adenovirus 40",
-      "Human betaherpesvirus",
-      "Human respiratory syncytial virus",
-      "Influenza B virus",
-      "Mammalian orthoreovirus 3",
-      "Zika virus"
-    )
-  ) +
-  ylab("Log (Viral Reads)") +
-  xlab("Log (Viral load)") + 
-  scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
-
-#normalise by raw read count and genome length
-
-read_count_norm2_dedup <- 
-  counts_reads_norm |>
-  filter(Background != "p6") |>
-  filter(Background != "control") |>
-  filter(type == "dedup_TE") |>
-  ggplot(aes(
-    x = Viral.load,
-    y = log10(norm_counts2),
-    colour = virus
-  )) +
-  geom_point() +
-  geom_smooth(aes(group = virus, linetype = genome_structure), se = FALSE, method = "lm") +
-  theme_few() +
-  theme(
-    axis.title.x = element_text(size = 12),
-    axis.text.x = element_text(angle = 0, hjust = 1),
-    axis.title.y = element_text(size = 12),
-    legend.title = element_blank(),
-    legend.position = "top", 
-    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-  ) +
-  scale_color_manual(
-    values = cols,
-    labels = c(
-      "Human adenovirus 40",
-      "Human betaherpesvirus",
-      "Human respiratory syncytial virus",
-      "Influenza B virus",
-      "Mammalian orthoreovirus 3",
-      "Zika virus"
-    )
-  ) +
-  ylab("Log (viral reads/cleaned reads/genome length)") +
-  xlab("Log (Viral load)") + 
-  scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
-```
-
-### ***Final plot***
-```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.width=8, fig.height=10}
-#plot just the two lefthand panels from the original figure
-
-ggarrange(
-  read_count_dedup,
-  read_count_norm2_dedup,
-  nrow = 2,
-  common.legend = TRUE,
-  align = "hv"
-)
-
-# ggsave("figures/compare_spike_ins_atcc/log_read_count_depth_2panels_dedup.png",
-#        width=10,
-#        height=7)
-
-ggsave("figures/manuscript_figure_2025/PDF/Figure_S1.pdf",
-       width=7,
-       height=8)
-
-ggsave("figures/manuscript_figure_2025/PNG/Figure_S1.png",
-       width=7,
-       height=8)
-
-```
-
-
-### --------------------
-
-
-## Figure S1
-
-### Read depths
-```{r}
-####read depths####
-
-#import and combine read depth files
-
-depth_dedup_bt <-
-  read_tsv(
-    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv"
-  )
-
-depth_nodedup_bt <-
-  read_tsv(
-    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv"
-  )
-
-depths_bt_all <- rbind(depth_dedup_bt, depth_nodedup_bt)
-
-depths_reads <- 
-  depths_bt_all |>
-  left_join(metadata2, by = "Sample_id") |>
-  mutate(genome_structure = case_when((
-    virus == "Human_adenovirus_40" |
-      virus == "Human_betaherpesvirus"
-  ) ~ "DNA",
-  .default = "RNA"
-  )) |>
-  rename(Viral.load = `Viral load`)
-
-```
-
-### Make plots
-```{r}
 
 read_depths <- 
   depths_reads |>
@@ -652,8 +525,9 @@ read_depths <-
       "Zika virus"
     )
   ) +
+  scale_linetype_manual(values=c(2, 1)) +
   ylab("Log (mean read depth)") +
-  xlab("Log (Viral load)") + 
+  xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
 
 #ggsave("figures/compare_spike_ins_atcc/mean_depth.pdf",width=8,height=6)
@@ -778,14 +652,14 @@ pool_counts_sum <-
   facet_grid( ~ type, labeller = as_labeller(facet_names)) +
   theme_few() +
   theme(
-    axis.title.x = element_blank(),
+    # axis.title.x = element_blank(),
     # axis.text.x = element_blank(),
     legend.title = element_blank(),
     axis.title.y = element_text(size = 10),
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
-  ylab("Log (Viral Reads)") + xlab("Log (Viral load)") +
+  ylab("Log (Viral Reads)") + xlab("Genome copies") +
   scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2")) + 
   scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5})))
   
@@ -820,14 +694,14 @@ pool_norm1_sum <-
   facet_grid( ~ type, labeller = as_labeller(facet_names)) +
   theme_few() +
   theme(
-    axis.title.x = element_blank(),
+    # axis.title.x = element_blank(),
     # axis.text.x = element_blank(),
     legend.title = element_blank(),
     axis.title.y = element_text(size = 10),
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray") 
   ) +
-  ylab("log10(viral reads/cleaned reads)") + xlab("Log (Viral load)") +
+  ylab("Log (viral reads/cleaned reads)") + xlab("Genome copies") +
   scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2")) + 
     scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5})))
 
@@ -862,14 +736,14 @@ pool_norm2_sum <-
   facet_grid( ~ type, labeller = as_labeller(facet_names)) +
   theme_few() +
   theme(
-    axis.title.x = element_blank(),
+    # axis.title.x = element_blank(),
     # axis.text.x = element_blank(),
     legend.title = element_blank(),
     axis.title.y = element_text(size = 10),
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
-  ylab("log10(viral reads/cleaned reads/genome length)") + xlab("Log (Viral load)") +
+  ylab("Log (viral reads/cleaned reads/genome length)") + xlab("Genome copies") +
   scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2")) + 
     scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5})))
 
@@ -933,7 +807,7 @@ pool_depths_sum <-
   facet_grid( ~ type, labeller = as_labeller(facet_names)) +
   theme_few() +
   theme(
-    axis.title.x = element_blank(),
+    # axis.title.x = element_blank(),
     # axis.text.x = element_blank(),
     legend.title = element_blank(),
     axis.title.y = element_text(size = 10),
@@ -941,7 +815,7 @@ pool_depths_sum <-
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
   ylab("Log (mean read depth)") +
-  xlab("Log (Viral load)") + 
+  xlab("Genome copies") + 
   scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5}))) +
   scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2"))
 
@@ -965,12 +839,12 @@ ggarrange(
 #ggsave("figures/compare_spike_ins_atcc/pool_compare_viruses_sum.png",width=10,height=7)
 
 ggsave("figures/manuscript_figure_2025/PDF/Figure_S2.pdf",
-       width = 10,
-       height = 7)
+       width = 12,
+       height = 8)
 
 ggsave("figures/manuscript_figure_2025/PNG/Figure_S2.png",
-       width = 10,
-       height = 7)
+       width = 12,
+       height = 8)
 
 ```
 
@@ -1082,7 +956,7 @@ total_reads <-
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
   scale_y_log10(labels = scales::trans_format("log10", scales::label_math())) + 
-    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   # ggtitle("All") +
   ylab("Total number of reads") +
   scale_color_manual(values = cols2, labels = c("P1", "P2"))
@@ -1106,7 +980,7 @@ viral_reads <-
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
   scale_y_log10(labels = scales::trans_format("log10", scales::label_math())) + 
-    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   # ggtitle("Viral reads") +
   ylab("Number of viral reads") +
   scale_color_manual(values = cols2, labels = c("P1", "P2"))
@@ -1130,7 +1004,7 @@ ATCC_reads <-
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
   scale_y_log10(labels = scales::trans_format("log10", scales::label_math())) + 
-    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   ggtitle("Spike-in Viral Reads") +
   ylab("Spike-in Viral Reads") +
   scale_color_manual(values = cols2, labels = c("P1", "P2"))
@@ -1148,7 +1022,7 @@ prop_ATCC <- reads_plot |>
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
-    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+    scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   ggtitle("Spike-in viral reads") +
   ylab("Proportion") +
   scale_color_manual(values = cols2, labels = c("P1", "P2"))
@@ -1166,7 +1040,7 @@ prop_viral <- reads_plot |>
     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
   ) +
- scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Viral load") +
+ scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + xlab("Genome copies") +
   # ggtitle("Viral reads") +
   ylab("Proportion of viral reads") +
   scale_color_manual(values = cols2, labels = c("P1", "P2")) + scale_y_continuous(limits=c(0,1.0))
