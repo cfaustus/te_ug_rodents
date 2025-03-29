@@ -408,8 +408,6 @@ read_count <-
       "Zika virus"
     )
   ) +
-  scale_linetype_manual(values=c(2, 1)) +
-  ylab(" Log (Viral Reads)") +
   scale_linetype_manual(values=c("dotted", "solid")) + 
   ylab("Log (Viral Reads)") +
   xlab("Genome copies") + 
@@ -448,7 +446,7 @@ read_count_norm1 <-
       "Zika virus"
     )
   ) +
-  scale_linetype_manual(values=c(3, 1)) +
+  scale_linetype_manual(values=c("dotted", "solid")) + 
   ylab("Log (viral reads/cleaned reads)") +
   xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
@@ -488,7 +486,7 @@ read_count_norm2 <-
       "Zika virus"
     )
   ) +
-  scale_linetype_manual(values=c(3, 1)) +
+  scale_linetype_manual(values=c("dotted", "solid")) + 
   ylab("Log (viral reads/cleaned reads/genome length)") +
   xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
@@ -527,7 +525,7 @@ read_depths <-
       "Zika virus"
     )
   ) +
-  scale_linetype_manual(values=c(3, 1)) +
+  scale_linetype_manual(values=c(2, 1)) +
   ylab("Log (mean read depth)") +
   xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
