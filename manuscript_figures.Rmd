@@ -1957,9 +1957,11 @@ dedup_long <-
       .default = "on_target"
     )
   ) |>
-  mutate(genome_structure = case_when((genus == "Mastadenovirus" |
-                                         genus == "Cytomegalovirus") ~ "DNA",
-                                      .default = "RNA"
+  mutate(genome_structure = 
+           case_when((genus == "Mastadenovirus" | 
+                        genus == "Cytomegalovirus" | 
+                        genus == "Cyclovirus" ~ "DNA"),
+                     .default = "RNA"
   ))
 
 no_dedup_long <- contingency_nodedup |>
@@ -1976,9 +1978,11 @@ no_dedup_long <- contingency_nodedup |>
       .default = "on_target"
     )
   ) |>
-  mutate(genome_structure = case_when((genus == "Mastadenovirus" |
-                                         genus == "Cytomegalovirus") ~ "DNA",
-                                      .default = "RNA"
+  mutate(genome_structure = 
+           case_when((genus == "Mastadenovirus" | 
+                        genus == "Cytomegalovirus" | 
+                        genus == "Cyclovirus" ~ "DNA"),
+                     .default = "RNA"
   ))
 
 metadata_dedup <- left_join(dedup_long, metadata2, by = "Sample_id")
