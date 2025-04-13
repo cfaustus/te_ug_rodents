@@ -262,8 +262,288 @@ ggsave("figures/manuscript_figure_2025/PNG/Figure_1.png",
 
 
 ### --------------------
-
 ## Figure S1
+
+### Read-in data / Make plots
+```{r}
+#metadata
+
+metadata <-
+  read.csv(
+    "metadata/sampleIDs_TESpikeIn.csv",
+    header = TRUE
+  )
+
+metadata2 <- metadata |>
+  select(Sample.ID, Number.of.read.pairs..quality.adaptor.trimmed.) |>
+  rename(Sample_id = Sample.ID) |>
+  rename(QC_reads = Number.of.read.pairs..quality.adaptor.trimmed.)
+
+#import and combine read count files
+#deduplicated and non-deduplicated
+
+counts_dedup_bt <-
+  read.table(
+    "data_TE/TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+counts_nodedup_bt <-
+  read.table(
+    "data_TE/TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+counts_bt_all <- rbind(counts_dedup_bt, counts_nodedup_bt)
+
+counts_reads <- left_join(counts_bt_all, metadata2, by = "Sample_id")
+
+#normalise by both raw read count and genome length - should be the same as mean read depth
+
+counts_reads_norm <- counts_reads |>
+  mutate(norm_counts1 = matched / QC_reads) |>
+  mutate(norm_counts2 = matched / QC_reads / length) |>
+  mutate(norm_counts3 = matched / length) |>
+  mutate(genome_structure = case_when((
+    virus == "Human_adenovirus_40" |
+      virus == "Human_betaherpesvirus"
+  ) ~ "DNA",
+  .default = "RNA"
+  ))
+
+####compare library capture pool####
+
+cols3 <- c("#228833", "#AA3377")
+
+facet_names <- c("dedup_TE" = "Deduplicated",
+                 "nodedup_TE" = "Non-Deduplicated")
+
+metadata3 <- 
+  metadata |>
+  select(Sample.ID, Pool.for.sequencing) |>
+  rename(Sample_id = Sample.ID) |>
+  rename(Pool = Pool.for.sequencing)
+
+counts_pool <- left_join(counts_reads_norm, metadata3, by = "Sample_id")
+
+```
+
+### Make plots
+```{r}
+
+pool_counts_sum <- 
+  counts_pool |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = as.character(Viral.load),
+    y = log10(matched),
+    colour = Pool
+  )) +
+  geom_boxplot() +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    # axis.title.x = element_blank(),
+    # axis.text.x = element_blank(),
+    legend.title = element_blank(),
+    axis.title.y = element_text(size = 10),
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  ylab("Log (Viral Reads)") + xlab("Genome copies") +
+  scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2")) + 
+  scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5})))
+  
+
+# pool_readcounts_norm <- 
+#   counts_pool |>
+#   filter(Background != "p6") |>
+#   filter(Background != "control") |>
+#   ggplot(aes(x = virus, y = log10(norm_counts1))) +
+#   geom_boxplot() +
+#   facet_grid(Pool ~ type) +
+#   theme_few() +
+#   theme(
+#     axis.title.x = element_blank(),
+#     # axis.text.x = element_blank(),
+#     axis.title.y = element_text(size = 10),
+#     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+#     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+#   ) +
+#   ylab("log10(viral reads/cleaned reads)")
+
+pool_norm1_sum <- 
+  counts_pool |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = as.character(Viral.load),
+    y = log10(norm_counts1),
+    colour = Pool
+  )) +
+  geom_boxplot() +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    # axis.title.x = element_blank(),
+    # axis.text.x = element_blank(),
+    legend.title = element_blank(),
+    axis.title.y = element_text(size = 10),
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray") 
+  ) +
+  ylab("Log (viral reads/cleaned reads)") + xlab("Genome copies") +
+  scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2")) + 
+    scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5})))
+
+# pool_readcounts_norm2 <- 
+#   counts_pool |>
+#   filter(Background != "p6") |>
+#   filter(Background != "control") |>
+#   ggplot(aes(x = virus, y = log10(norm_counts2))) +
+#   geom_boxplot() +
+#   facet_grid(Pool ~ type) +
+#   theme_few() +
+#   theme(
+#     axis.title.x = element_blank(),
+#     # axis.text.x = element_blank(),
+#     axis.title.y = element_text(size = 10),
+#     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+#     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+#   ) +
+#   ylab("log10(viral reads/cleaned reads/genome length)")
+
+
+pool_norm2_sum <- 
+  counts_pool |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = as.character(Viral.load),
+    y = norm_counts2,
+    colour = Pool
+  )) +
+  geom_boxplot() +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    # axis.title.x = element_blank(),
+    # axis.text.x = element_blank(),
+    legend.title = element_blank(),
+    axis.title.y = element_text(size = 10),
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  ylab("Log (viral reads/cleaned reads/genome length)") + xlab("Genome copies") +
+  scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2")) + 
+    scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5})))
+
+
+#import and combine read depth files
+
+depth_dedup_bt <-
+  read.table(
+    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+depth_nodedup_bt <-
+  read.table(
+    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv",
+    sep = "\t",
+    header = TRUE
+  )
+
+depths_bt_all <- rbind(depth_dedup_bt, depth_nodedup_bt)
+
+depths_reads <- 
+  left_join(depths_bt_all, metadata2, by = "Sample_id") |>
+  mutate(genome_structure = case_when((
+    virus == "Human_adenovirus_40" |
+      virus == "Human_betaherpesvirus"
+  ) ~ "DNA",
+  .default = "RNA"
+  ))
+
+depths_pool <- left_join(depths_reads, metadata3, by = "Sample_id")
+
+# pool_readdepths <- 
+#   depths_pool |>
+#   filter(Background != "p6") |>
+#   filter(Background != "control") |>
+#   ggplot(aes(x = virus, y = log10(mean_depth))) +
+#   geom_boxplot() +
+#   facet_grid(Pool ~ type) +
+#   theme_few() +
+#   theme(
+#     axis.title.x = element_blank(),
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     axis.title.y = element_text(size = 10),
+#     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+#     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+#   ) +
+#   ylab("Log (mean read depth)")
+
+pool_depths_sum <-
+  depths_pool |>
+  filter(Background != "p6") |>
+  filter(Background != "control") |>
+  ggplot(aes(
+    x = as.character(Viral.load),
+    y = log10(mean_depth),
+    colour = Pool
+  )) +
+  geom_boxplot() +
+  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
+  theme_few() +
+  theme(
+    # axis.title.x = element_blank(),
+    # axis.text.x = element_blank(),
+    legend.title = element_blank(),
+    axis.title.y = element_text(size = 10),
+    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
+    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
+  ) +
+  ylab("Log (mean read depth)") +
+  xlab("Genome copies") + 
+  scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5}))) +
+  scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2"))
+
+
+```
+
+### ***Final plot***
+```{r}
+ggarrange(
+  pool_counts_sum,
+  pool_depths_sum,
+  nrow = 1,
+  ncol = 2,
+  common.legend = TRUE, 
+  align = "hv"
+)
+
+
+#ggsave("figures/compare_spike_ins_atcc/pool_compare_viruses_sum.png",width=10,height=7)
+
+ggsave("figures/manuscript_figure_2025/PDF/Figure_S1.pdf",
+       width = 12,
+       height = 4)
+
+ggsave("figures/manuscript_figure_2025/PNG/Figure_S1.png",
+       width = 12,
+       height = 4)
+
+```
+
+### --------------------
+
+
+## Figure S2
 
 ### Read counts
 ```{r}
@@ -525,11 +805,8 @@ read_depths <-
       "Zika virus"
     )
   ) +
-<<<<<<< HEAD
   scale_linetype_manual(values=c(2, 1)) +
-=======
   scale_linetype_manual(values=c("dotted", "solid")) + 
->>>>>>> fe36adb (update notebook)
   ylab("Log (mean read depth)") +
   xlab("Genome copies") + 
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math()))
@@ -558,290 +835,6 @@ ggarrange(
 
 #apparently normalised read count using method 2 should not actually be the same
 
-ggsave("figures/manuscript_figure_2025/PDF/Figure_S1.pdf",
-       width = 12,
-       height = 8)
-
-ggsave("figures/manuscript_figure_2025/PNG/Figure_S1.png",
-       width = 12,
-       height = 8)
-
-
-```
-
-
-### --------------------
-
-## Figure S2
-
-### Read-in data / Make plots
-```{r}
-#metadata
-
-metadata <-
-  read.csv(
-    "metadata/sampleIDs_TESpikeIn.csv",
-    header = TRUE
-  )
-
-metadata2 <- metadata |>
-  select(Sample.ID, Number.of.read.pairs..quality.adaptor.trimmed.) |>
-  rename(Sample_id = Sample.ID) |>
-  rename(QC_reads = Number.of.read.pairs..quality.adaptor.trimmed.)
-
-#import and combine read count files
-#deduplicated and non-deduplicated
-
-counts_dedup_bt <-
-  read.table(
-    "data_TE/TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
-    sep = "\t",
-    header = TRUE
-  )
-
-counts_nodedup_bt <-
-  read.table(
-    "data_TE/TE_sequencing_experiment_readcount_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv",
-    sep = "\t",
-    header = TRUE
-  )
-
-counts_bt_all <- rbind(counts_dedup_bt, counts_nodedup_bt)
-
-counts_reads <- left_join(counts_bt_all, metadata2, by = "Sample_id")
-
-#normalise by both raw read count and genome length - should be the same as mean read depth
-
-counts_reads_norm <- counts_reads |>
-  mutate(norm_counts1 = matched / QC_reads) |>
-  mutate(norm_counts2 = matched / QC_reads / length) |>
-  mutate(norm_counts3 = matched / length) |>
-  mutate(genome_structure = case_when((
-    virus == "Human_adenovirus_40" |
-      virus == "Human_betaherpesvirus"
-  ) ~ "DNA",
-  .default = "RNA"
-  ))
-
-####compare library capture pool####
-
-cols3 <- c("#228833", "#AA3377")
-
-facet_names <- c("dedup_TE" = "Deduplicated",
-                 "nodedup_TE" = "Non-Deduplicated")
-
-metadata3 <- 
-  metadata |>
-  select(Sample.ID, Pool.for.sequencing) |>
-  rename(Sample_id = Sample.ID) |>
-  rename(Pool = Pool.for.sequencing)
-
-counts_pool <- left_join(counts_reads_norm, metadata3, by = "Sample_id")
-
-```
-
-### Make plots
-```{r}
-
-pool_counts_sum <- 
-  counts_pool |>
-  filter(Background != "p6") |>
-  filter(Background != "control") |>
-  ggplot(aes(
-    x = as.character(Viral.load),
-    y = log10(matched),
-    colour = Pool
-  )) +
-  geom_boxplot() +
-  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
-  theme_few() +
-  theme(
-    # axis.title.x = element_blank(),
-    # axis.text.x = element_blank(),
-    legend.title = element_blank(),
-    axis.title.y = element_text(size = 10),
-    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-  ) +
-  ylab("Log (Viral Reads)") + xlab("Genome copies") +
-  scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2")) + 
-  scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5})))
-  
-
-# pool_readcounts_norm <- 
-#   counts_pool |>
-#   filter(Background != "p6") |>
-#   filter(Background != "control") |>
-#   ggplot(aes(x = virus, y = log10(norm_counts1))) +
-#   geom_boxplot() +
-#   facet_grid(Pool ~ type) +
-#   theme_few() +
-#   theme(
-#     axis.title.x = element_blank(),
-#     # axis.text.x = element_blank(),
-#     axis.title.y = element_text(size = 10),
-#     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-#     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-#   ) +
-#   ylab("log10(viral reads/cleaned reads)")
-
-pool_norm1_sum <- 
-  counts_pool |>
-  filter(Background != "p6") |>
-  filter(Background != "control") |>
-  ggplot(aes(
-    x = as.character(Viral.load),
-    y = log10(matched),
-    colour = Pool
-  )) +
-  geom_boxplot() +
-  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
-  theme_few() +
-  theme(
-    # axis.title.x = element_blank(),
-    # axis.text.x = element_blank(),
-    legend.title = element_blank(),
-    axis.title.y = element_text(size = 10),
-    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray") 
-  ) +
-  ylab("Log (viral reads/cleaned reads)") + xlab("Genome copies") +
-  scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2")) + 
-    scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5})))
-
-# pool_readcounts_norm2 <- 
-#   counts_pool |>
-#   filter(Background != "p6") |>
-#   filter(Background != "control") |>
-#   ggplot(aes(x = virus, y = log10(norm_counts2))) +
-#   geom_boxplot() +
-#   facet_grid(Pool ~ type) +
-#   theme_few() +
-#   theme(
-#     axis.title.x = element_blank(),
-#     # axis.text.x = element_blank(),
-#     axis.title.y = element_text(size = 10),
-#     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-#     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-#   ) +
-#   ylab("log10(viral reads/cleaned reads/genome length)")
-
-
-pool_norm2_sum <- 
-  counts_pool |>
-  filter(Background != "p6") |>
-  filter(Background != "control") |>
-  ggplot(aes(
-    x = as.character(Viral.load),
-    y = log10(matched),
-    colour = Pool
-  )) +
-  geom_boxplot() +
-  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
-  theme_few() +
-  theme(
-    # axis.title.x = element_blank(),
-    # axis.text.x = element_blank(),
-    legend.title = element_blank(),
-    axis.title.y = element_text(size = 10),
-    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-  ) +
-  ylab("Log (viral reads/cleaned reads/genome length)") + xlab("Genome copies") +
-  scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2")) + 
-    scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5})))
-
-
-#import and combine read depth files
-
-depth_dedup_bt <-
-  read.table(
-    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_dedup_atcc_ref.tsv",
-    sep = "\t",
-    header = TRUE
-  )
-
-depth_nodedup_bt <-
-  read.table(
-    "data_TE/TE_sequencing_experiment_readdepth_per_sample_and_virus_bowtie2_nodedup_atcc_ref.tsv",
-    sep = "\t",
-    header = TRUE
-  )
-
-depths_bt_all <- rbind(depth_dedup_bt, depth_nodedup_bt)
-
-depths_reads <- 
-  left_join(depths_bt_all, metadata2, by = "Sample_id") |>
-  mutate(genome_structure = case_when((
-    virus == "Human_adenovirus_40" |
-      virus == "Human_betaherpesvirus"
-  ) ~ "DNA",
-  .default = "RNA"
-  ))
-
-depths_pool <- left_join(depths_reads, metadata3, by = "Sample_id")
-
-# pool_readdepths <- 
-#   depths_pool |>
-#   filter(Background != "p6") |>
-#   filter(Background != "control") |>
-#   ggplot(aes(x = virus, y = log10(mean_depth))) +
-#   geom_boxplot() +
-#   facet_grid(Pool ~ type) +
-#   theme_few() +
-#   theme(
-#     axis.title.x = element_blank(),
-#     axis.text.x = element_text(angle = 45, hjust = 1),
-#     axis.title.y = element_text(size = 10),
-#     panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-#     panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-#   ) +
-#   ylab("Log (mean read depth)")
-
-pool_depths_sum <-
-  depths_pool |>
-  filter(Background != "p6") |>
-  filter(Background != "control") |>
-  ggplot(aes(
-    x = as.character(Viral.load),
-    y = log10(mean_depth),
-    colour = Pool
-  )) +
-  geom_boxplot() +
-  facet_grid( ~ type, labeller = as_labeller(facet_names)) +
-  theme_few() +
-  theme(
-    # axis.title.x = element_blank(),
-    # axis.text.x = element_blank(),
-    legend.title = element_blank(),
-    axis.title.y = element_text(size = 10),
-    panel.grid.major = element_line(linewidth=0.1, color = "gray60"),
-    panel.grid.minor = element_line(linewidth=0.1, color = "lightgray")
-  ) +
-  ylab("Log (mean read depth)") +
-  xlab("Genome copies") + 
-  scale_x_discrete(labels = c(bquote(10^{2}), bquote(10^{3}), bquote(10^{5}))) +
-  scale_color_manual(values = cols3, labels = c("Pool 1", "Pool 2"))
-
-
-```
-
-### ***Final plot***
-```{r}
-ggarrange(
-  pool_counts_sum,
-  pool_norm1_sum,
-  pool_norm2_sum,
-  pool_depths_sum,
-  nrow = 2,
-  ncol = 2,
-  common.legend = TRUE, 
-  align = "hv"
-)
-
-
-#ggsave("figures/compare_spike_ins_atcc/pool_compare_viruses_sum.png",width=10,height=7)
-
 ggsave("figures/manuscript_figure_2025/PDF/Figure_S2.pdf",
        width = 12,
        height = 8)
@@ -850,9 +843,12 @@ ggsave("figures/manuscript_figure_2025/PNG/Figure_S2.png",
        width = 12,
        height = 8)
 
+
 ```
 
+
 ### --------------------
+
 
 ## Figure S3
 ```{r}
