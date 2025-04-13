@@ -1710,7 +1710,6 @@ ggsave(plot = HBV, file="figures/manuscript_figure_2025/PNG/Figure_S7.png",
 ```{r}
 #have to do these differently due to segmentation
 
-
 FLU_ME1 <- persite_norm |>
   filter(virus == "Influenza_B_virus") |>
   filter(type == "dedup_TE") |>
@@ -1742,7 +1741,7 @@ FLU_ME1 <- persite_norm |>
 FLU_ME2 <- persite_norm |>
   filter(virus == "Influenza_B_virus") |>
   filter(type == "dedup_TE") |>
-  filter(Background == "p2") |>
+  filter(Background == "p8") |>
   rename(Viral.load = `Viral load`) |>
   ggplot(aes(
     x = site,
