@@ -192,7 +192,7 @@ lm_summary <- depths_reads_sub |>
 lm_combined <- 
   left_join(lm_tidy, lm_summary, by = "virus")
 
-
+lm_combined$virus_type =c('DNA','DNA','RNA','RNA','RNA','RNA')
 ```
 
 #### Make plot
@@ -201,7 +201,7 @@ lm_combined <-
 ggplot() +
   geom_point(data = depths_reads_sub,
              mapping = aes(Viral.load, mean_depth, color = virus)) +
-  geom_abline(data = lm_combined, aes(intercept = `(Intercept)`, slope = log_viral_load), linetype="dotted") +
+  geom_abline(data = lm_combined, aes(intercept = `(Intercept)`, slope = log_viral_load, linetype=virus_type, color = virus)) +
   geom_text(data = lm_combined,
             colour = "black",
             aes(
@@ -241,6 +241,8 @@ ggplot() +
   ylab("Mean Read Depth") +
   scale_color_manual(values = cols) +
   guides(color = FALSE) +
+  scale_linetype_manual(values=c("dotted", "solid"))+
+  guides(linetype = FALSE)+
   scale_x_log10(labels = scales::trans_format("log10", scales::label_math())) + 
     scale_y_log10(labels = scales::trans_format("log10", scales::label_math()))
 
@@ -1454,7 +1456,7 @@ persite_coverage_both |>
   ylab("Genome coverage") +
   theme(
     axis.title.x = element_text(size = 12),
-    axis.text.x = element_text(angle = 30, hjust = 1),
+    axis.text.x = element_text(angle = 20, hjust = 1),
     axis.title.y = element_text(size = 12),
     legend.title = element_blank(),
     legend.position = "top", 
