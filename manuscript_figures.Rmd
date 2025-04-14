@@ -1165,7 +1165,7 @@ background_counts_reads <-
       "Zika virus"
       )
   ) +
-  scale_x_log10(labels = scales::label_log10()) +
+ scale_x_log10(labels = label_log()) +  # scales::label_log10()
   ylab("Log (Viral Reads)")
 
 backgrounds_counts_reads_norm <- 
@@ -1199,7 +1199,7 @@ backgrounds_counts_reads_norm <-
       "Zika virus"
     )
   ) +
-  scale_x_log10(label = scales::label_log10()) +
+  scale_x_log10(label = label_log()) + # scales::label_log10()
   ylab("Log (viral reads/cleaned reads)")
 
 backgrounds_counts_reads_norm2 <- 
@@ -1232,7 +1232,7 @@ backgrounds_counts_reads_norm2 <-
       "Zika virus"
     )
   ) +
-  scale_x_log10(labels = scales::label_log10()) +
+  scale_x_log10(labels = label_log()) +# scales::label_log10()
   ylab("Log (viral reads/cleaned reads/genome length)")
 
 background_read_depths <- 
@@ -1266,7 +1266,7 @@ background_read_depths <-
       "Zika virus"
     )
   ) +
-  scale_x_log10(label = scales::label_log10()) +
+  scale_x_log10(label = label_log()) + # scales::label_log10()
   ylab("Log (mean read depth)")
 
 ```
@@ -2024,6 +2024,7 @@ cols <-
   )
 
 
+
 dedup_reads <- 
   dedup_viral_reads |>
   filter(Background.sample != "Neg_control") |>
@@ -2034,7 +2035,7 @@ dedup_reads <-
     colour = genus
   )) +
   geom_point() +
-  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
+  geom_smooth(aes(group = genus, linetype = genome_structure), method = lm, se = FALSE) +
   facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
   theme_few() + 
   scale_x_log10() +
@@ -2061,7 +2062,7 @@ dedup_prop_viral <-
   filter(Background.sample != "Msp_p6") |>
   ggplot(aes(x = Viral.load, y = prop_viral, colour = genus)) +
   geom_point() +
-  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
+  geom_smooth(aes(group = genus, linetype = genome_structure), method = lm, se = FALSE) +
   facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
   theme_few() + 
   scale_x_log10() +
@@ -2090,7 +2091,7 @@ dedup_prop_all <-
   filter(Background.sample != "Msp_p6") |>
   ggplot(aes(x = Viral.load, y = prop_total, colour = genus)) +
   geom_point() +
-  geom_smooth(aes(group = genus, linetype = genome_structure), se = FALSE) +
+  geom_smooth(aes(group = genus, linetype = genome_structure), method = lm, se = FALSE) +
   facet_grid(target ~ Background.sample, labeller = as_labeller(facet_names)) +
   theme_few() + 
   scale_x_log10(labels = scales::trans_format("log10",
@@ -2143,6 +2144,7 @@ ggarrange(
   common.legend = TRUE,
   align = "hv"
 )
+
 
 # ggsave("figures/compare_spike_ins_atcc/target_offtarget_dedup_2025-01-01.png", width = 10, height = 8)
 
