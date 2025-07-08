@@ -2828,6 +2828,15 @@ ggsave("figures/manuscript_figure_2025/PNG/Figure_S14.png",
 #### Figure S15
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
+
+persite_both$Viral.load <- factor(persite_both$Viral.load, levels = c(
+    "10^{2}", 
+    "10^{3}", 
+    "10^{5}",
+    "Shotgun"
+    ))
+
+
 #per site genome coverage - Cardio
 
 persite_both |>
@@ -2837,12 +2846,10 @@ persite_both |>
   filter(Background != "p6") |>
   ggplot(aes(
     x = site,
-    y = coverage,
+    y = (coverage),
     fill = Background
   )) +
   geom_col() +
-  facet_wrap(Viral.load ~ Sample_id, labeller = label_parsed) +
-  scale_fill_manual(values = cols2, labels = c("M1", "M2")) +
   theme_few() +
   theme(
     axis.title.x = element_text(size = 12),
@@ -2851,7 +2858,9 @@ persite_both |>
     legend.position = "right",
     panel.grid.major = element_line(linewidth = 0.1, color = "gray60"),
     panel.grid.minor = element_line(linewidth = 0.1, color = "lightgray")
-  ) +
+  ) +   
+  facet_wrap(Viral.load ~ Sample_id, labeller = label_parsed) +
+  scale_fill_manual(values = cols2, labels = c("M1", "M2")) +
   ylab("Coverage") +
   xlab("") +
   ggtitle("Cardiovirus") +
